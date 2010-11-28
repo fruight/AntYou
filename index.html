@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>kaim</title>
+	</head>
+	<body>
+		<canvas id='c'></canvas>
+		<script type='application/javascript'>
+/* author:	fruight
+ * email:	fruight@gmail.com
+ * 
+ * AI-game inspired by AntMe
+*/
+(function(){
+	console.log('startSetup');
+	console.time('main');
+	//init
+	document.body.style.margin = '0px';
+	document.body.style.overflow = 'hidden';
+	var pause = 50;
+	var w = window.innerWidth;
+	var h = window.innerHeight;
+	var c = document.getElementById('c');
+	var C = c.getContext('2d');
+	c.width = w;
+	c.height = h;
+	c.style.width = '100%';
+	c.style.height = '100%';
+	//settings
+	var max = 10;
+	var a = [];
+	//console.log(a);
+	var s = [{p:6, v:1}
+		,{p:3, v:10}
+		];
+	console.log(s);
+	//setup
+	for(var i=0;i<max;i++){
+		a[i] = {};
+		a[i].s = Math.floor(Math.random()*s.length);
+		a[i].p = s[a[i].s].p;
+		a[i].v = s[a[i].s].v;
+		a[i].x = Math.random()*w;
+		a[i].y = Math.random()*h;
+		a[i].d = Math.random()*2*Math.PI;
+	}
+	//main loop
+	(loop = function(){
+		//console.time('loop');
+		for(var i=0;i<a.length;i++){
+			a[i].x += a[i].v * Math.sin(a[i].d);
+			a[i].y += a[i].v * Math.cos(a[i].d);
+		}
+		draw();
+		//console.timeEnd('loop');
+		window.setTimeout(loop, pause);
+	})();
+	//drawing loop
+	function draw(){
+		C.clearRect(0, 0, w, h);
+		for(var i=0;i<a.length;i++){
+			C.beginPath();
+			C.arc(a[i].x, a[i].y, a[i].p, 0, 2*Math.PI, true);
+			C.fill();
+		}
+	}
+	//end
+	console.timeEnd('main');
+	console.log('endSetup');
+})();
+		</script>
+	</body>
+</html>
