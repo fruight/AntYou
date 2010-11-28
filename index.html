@@ -27,42 +27,46 @@
 	c.style.width = '100%';
 	c.style.height = '100%';
 	//settings
-	var max = 10;
-	var a = [];
+	var maxPopulation = 10;
+	var actors = [];
 	//console.log(a);
-	var s = [{p:6, v:1}
-		,{p:3, v:10}
+	var species = [
+		 {size:6, speed:1}
+		,{size:3, speed:10}
 		];
-	console.log(s);
 	//setup
-	for(var i=0;i<max;i++){
-		a[i] = {};
-		a[i].s = Math.floor(Math.random()*s.length);
-		a[i].p = s[a[i].s].p;
-		a[i].v = s[a[i].s].v;
-		a[i].x = Math.random()*w;
-		a[i].y = Math.random()*h;
-		a[i].d = Math.random()*2*Math.PI;
+	for(var i=0;i<maxPopulation;i++){
+		actors[i] = {};
+		actors[i].species = Math.floor(Math.random()*species.length);
+		actors[i].size = species[actors[i].species].size;
+		actors[i].speed = species[actors[i].species].speed;
+		actors[i].x = Math.random()*w;
+		actors[i].y = Math.random()*h;
+		actors[i].heading = Math.random()*2*Math.PI;
 	}
 	//main loop
 	(loop = function(){
 		//console.time('loop');
-		for(var i=0;i<a.length;i++){
-			a[i].x += a[i].v * Math.sin(a[i].d);
-			a[i].y += a[i].v * Math.cos(a[i].d);
+		for(var i=0;i<actors.length;i++){
+			//update position
+			actors[i].x += actors[i].speed * Math.sin(actors[i].heading);
+			actors[i].y += actors[i].speed * Math.cos(actors[i].heading);
+			//keep on canvas TODO
+			if(actors[i].x < actors[i].size || actors[i].x > w-actors[i].size){actors.heading}
+			if(actors[i].y < actors[i].size || actors[i].y > h-actors[i].size){actors.heading}
 		}
-		draw();
+		C.clearRect(0, 0, w, h);
+		for(var i=0;i<actors.length;i++){draw(actors[i]);}
 		//console.timeEnd('loop');
 		window.setTimeout(loop, pause);
 	})();
 	//drawing loop
-	function draw(){
-		C.clearRect(0, 0, w, h);
-		for(var i=0;i<a.length;i++){
-			C.beginPath();
-			C.arc(a[i].x, a[i].y, a[i].p, 0, 2*Math.PI, true);
-			C.fill();
-		}
+	function draw(actor){
+		C.beginPath();
+		C.arc(actor.x, actor.y, actor.size, 0, 2*Math.PI, true);
+		C.moveTo(actor.x, actor.y);
+		C.lineTo(actor.x-actor.speed*10*Math.sin(actor.heading), actor.y-actor.speed*10*Math.cos(actor.heading));
+		C.stroke();
 	}
 	//end
 	console.timeEnd('main');
