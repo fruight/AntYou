@@ -17,7 +17,7 @@
 	//init
 	document.body.style.margin = '0px';
 	document.body.style.overflow = 'hidden';
-	var pause = 50;
+	var fps = 40;
 	var w = window.innerWidth;
 	var h = window.innerHeight;
 	var c = document.getElementById('c');
@@ -60,6 +60,7 @@
 	(loop = function(){
 		//console.time('loop');//DEBUG
 		//console.count('loop');//DEBUG
+		window.setTimeout(loop, 1000/fps);
 		for(var i=0;i<actors.length;i++){
 			//update position
 			actors[i].x += actors[i].speed * Math.cos(actors[i].heading);
@@ -78,7 +79,6 @@
 		C.beginPath();for(var i=100;i<w;i+=100){C.moveTo(i,0);C.lineTo(i,h);}for(var i=100;i<h;i+=100){C.moveTo(0,i);C.lineTo(w,i);}C.stroke();;//DEBUG grid
 		for(var i=0;i<actors.length;i++){draw(actors[i]);}
 		//console.timeEnd('loop');//DEBUG
-		window.setTimeout(loop, pause);
 	})();
 	//drawing loop
 	function draw(actor){
