@@ -32,10 +32,15 @@
 	var roles = [
 		 {size: 6, speed:10}
 		,{size:10, speed: 1}
+		,{size:10, speed: 1, shape:'F'}
 		,{size:10, speed: 4, shape:'diamond'}
+		,{size:10, speed: 4, shape:'diamondF'}
 		,{size:10, speed: 2, shape:'square'}
-		,{size:20, speed: 3, shape:'tri'}
-		,{size:20, speed: 5, shape:'arrow'}
+		,{size:10, speed: 2, shape:'squareF'}
+		,{size:10, speed: 0.2, shape:'tri'}
+		,{size:10, speed: 0.2, shape:'triF'}
+		,{size:10, speed: 3, shape:'arrow'}
+		,{size:10, speed: 3, shape:'arrowF'}
 		];
 	//setup
 	for(var i=0;i<maxPopulation;i++){
@@ -50,8 +55,8 @@
 	}
 	//main loop
 	(loop = function(){
-		//console.time('loop');
-		console.count('loop');
+		//DEBUG console.time('loop');
+		//DEBUG console.count('loop');
 		for(var i=0;i<actors.length;i++){
 			//update position
 			actors[i].x += actors[i].speed * Math.cos(actors[i].heading);
@@ -67,7 +72,7 @@
 		//draw all actors
 		C.clearRect(0, 0, w, h);
 		for(var i=0;i<actors.length;i++){draw(actors[i]);}
-		//console.timeEnd('loop');
+		//DEBUG console.timeEnd('loop');
 		window.setTimeout(loop, pause);
 	})();
 	//drawing loop
@@ -75,25 +80,26 @@
 		var s = Math.sin(actor.heading);
 		var c = Math.cos(actor.heading);
 		var r = actor.size/2;
+		if(actor.shape===undefined){actor.shape = '';}
 		C.beginPath();
-		if(actor.shape==='square'){
+		if(actor.shape.substring(0,6)==='square'){
 			C.moveTo(actor.x + c * r - s * r, actor.y - s * r - c * r);
 			C.lineTo(actor.x - s * r - c * r, actor.y - c * r + s * r);
 			C.lineTo(actor.x - c * r + s * r, actor.y + s * r + c * r);
 			C.lineTo(actor.x + s * r + c * r, actor.y + c * r - s * r);
 			C.lineTo(actor.x + c * r - s * r, actor.y - s * r - c * r);
-		}else if(actor.shape==='diamond'){
+		}else if(actor.shape.substring(0,7)==='diamond'){
 			C.moveTo(actor.x + c * r, actor.y - s * r);
 			C.lineTo(actor.x - s * r, actor.y - c * r);
 			C.lineTo(actor.x - c * r, actor.y + s * r);
 			C.lineTo(actor.x + s * r, actor.y + c * r);
 			C.lineTo(actor.x + c * r, actor.y - s * r);
-		}else if(actor.shape==='tri'){
+		}else if(actor.shape.substring(0,3)==='tri'){
 			C.moveTo(actor.x + c * r, actor.y - s * r);
 			C.lineTo(actor.x - s * r - c * r, actor.y - c * r + s * r);
 			C.lineTo(actor.x - c * r + s * r, actor.y + s * r + c * r);
 			C.lineTo(actor.x + c * r, actor.y - s * r);
-		}else if(actor.shape==='arrow'){
+		}else if(actor.shape.substring(0,5)==='arrow'){
 			C.moveTo(actor.x + c * r, actor.y - s * r);
 			C.lineTo(actor.x - s * r - c * r, actor.y - c * r + s * r);
 			C.lineTo(actor.x, actor.y);
@@ -105,7 +111,8 @@
 		//add a trail to show speed and heading
 		C.moveTo(actor.x, actor.y);
 		C.lineTo(actor.x-actor.speed*10*c, actor.y+actor.speed*10*s);
-		//finish it off
+		//draw filled or hollow
+		if(actor.shape[actor.shape.length-1]==='F'){C.fill();}
 		C.stroke();
 	}
 	//end
