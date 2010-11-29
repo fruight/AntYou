@@ -29,33 +29,38 @@
 	//settings
 	var maxPopulation = 50;
 	var actors = [];
-	//console.log(a);
-	var species = [
-		 {size:6, speed:1}
-		,{size:4, speed:4, shape:'square'}
-		,{size:3, speed:10}
+	var roles = [
+		 {size: 6, speed:10}
+		,{size:10, speed: 1}
+		,{size:10, speed: 4, shape:'diamond'}
+		,{size:10, speed: 2, shape:'square'}
+		,{size:20, speed: 3, shape:'tri'}
+		,{size:20, speed: 5, shape:'arrow'}
 		];
 	//setup
 	for(var i=0;i<maxPopulation;i++){
 		actors[i] = {};
-		actors[i].species = Math.floor(Math.random()*species.length);
-		actors[i].size = species[actors[i].species].size;
-		actors[i].speed = species[actors[i].species].speed;
+		actors[i].role = Math.floor(Math.random()*roles.length);
+		actors[i].size = roles[actors[i].role].size;
+		actors[i].speed = roles[actors[i].role].speed;
 		actors[i].x = Math.random()*w;
 		actors[i].y = Math.random()*h;
 		actors[i].heading = Math.random()*2*Math.PI;
-		if(species[actors[i].species].shape){actors[i].shape = species[actors[i].species].shape;}
+		actors[i].shape = roles[actors[i].role].shape;
 	}
 	//main loop
 	(loop = function(){
 		//console.time('loop');
+		console.count('loop');
 		for(var i=0;i<actors.length;i++){
 			//update position
-			actors[i].x += actors[i].speed * Math.sin(actors[i].heading);
-			actors[i].y += actors[i].speed * Math.cos(actors[i].heading);
+			actors[i].x += actors[i].speed * Math.cos(actors[i].heading);
+			actors[i].y -= actors[i].speed * Math.sin(actors[i].heading);
 			//keep on canvas TODO
 			if(actors[i].x < actors[i].size || actors[i].x > w-actors[i].size){actors.heading}
 			if(actors[i].y < actors[i].size || actors[i].y > h-actors[i].size){actors.heading}
+			//keep heading in valid range
+			if(actors[i].heading >= 2*Math.PI){actors[i].heading -= 2*Math.PI;}
 		}
 		//draw all actors
 		C.clearRect(0, 0, w, h);
@@ -65,19 +70,41 @@
 	})();
 	//drawing loop
 	function draw(actor){
+		var s = Math.sin(actor.heading);
+		var c = Math.cos(actor.heading);
+		var r = actor.size/2;
+		C.beginPath();
 		if(actor.shape==='square'){
-			C.beginPath();
-			C.rect(actor.x-actor.size,actor.y-actor.size,actor.size*2,actor.size*2);
-			C.moveTo(actor.x, actor.y);
-			C.lineTo(actor.x-actor.speed*10*Math.sin(actor.heading), actor.y-actor.speed*10*Math.cos(actor.heading));
-			C.stroke();
-		}else{
-			C.beginPath();
-			C.arc(actor.x, actor.y, actor.size, 0, 2*Math.PI, true);
-			C.moveTo(actor.x, actor.y);
-			C.lineTo(actor.x-actor.speed*10*Math.sin(actor.heading), actor.y-actor.speed*10*Math.cos(actor.heading));
-			C.stroke();
+			C.moveTo(actor.x + c * r - s * r, actor.y - s * r - c * r);
+			C.lineTo(actor.x - s * r - c * r, actor.y - c * r + s * r);
+			C.lineTo(actor.x - c * r + s * r, actor.y + s * r + c * r);
+			C.lineTo(actor.x + s * r + c * r, actor.y + c * r - s * r);
+			C.lineTo(actor.x + c * r - s * r, actor.y - s * r - c * r);
+		}else if(actor.shape==='diamond'){
+			C.moveTo(actor.x + c * r, actor.y - s * r);
+			C.lineTo(actor.x - s * r, actor.y - c * r);
+			C.lineTo(actor.x - c * r, actor.y + s * r);
+			C.lineTo(actor.x + s * r, actor.y + c * r);
+			C.lineTo(actor.x + c * r, actor.y - s * r);
+		}else if(actor.shape==='tri'){
+			C.moveTo(actor.x + c * r, actor.y - s * r);
+			C.lineTo(actor.x - s * r - c * r, actor.y - c * r + s * r);
+			C.lineTo(actor.x - c * r + s * r, actor.y + s * r + c * r);
+			C.lineTo(actor.x + c * r, actor.y - s * r);
+		}else if(actor.shape==='arrow'){
+			C.moveTo(actor.x + c * r, actor.y - s * r);
+			C.lineTo(actor.x - s * r - c * r, actor.y - c * r + s * r);
+			C.lineTo(actor.x, actor.y);
+			C.lineTo(actor.x - c * r + s * r, actor.y + s * r + c * r);
+			C.lineTo(actor.x + c * r, actor.y - s * r);
+		}else{ //default shape is circle
+			C.arc(actor.x, actor.y, r, 0, 2*Math.PI, true);
 		}
+		//add a trail to show speed and heading
+		C.moveTo(actor.x, actor.y);
+		C.lineTo(actor.x-actor.speed*10*c, actor.y+actor.speed*10*s);
+		//finish it off
+		C.stroke();
 	}
 	//end
 	console.timeEnd('main');
