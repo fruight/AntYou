@@ -26,24 +26,26 @@
 	c.height = h;
 	c.style.width = '100%';
 	c.style.height = '100%';
+
 	//settings
 	var maxPopulation = 50;
 	var actors = [];
 	var roles = [
 		 {size:10, speed:1}
-		,{size:10, speed:1,   shape:'unknownF'}
-		,{size:10, speed:1,   shape:'F'}
+		,{size:10, speed:1,   shape:'unknown:F'}
+		,{size:10, speed:1,   shape:':F'}
 		,{size:10, speed:4,   shape:'diamond'}
-		,{size:10, speed:4,   shape:'diamondF'}
+		,{size:10, speed:4,   shape:'diamond:F'}
 		,{size:10, speed:2,   shape:'square'}
-		,{size:10, speed:2,   shape:'squareF'}
+		,{size:10, speed:2,   shape:'square:F'}
 		,{size:10, speed:0.5, shape:'tri'}
-		,{size:10, speed:0.5, shape:'triF'}
+		,{size:10, speed:0.5, shape:'tri:F'}
 		,{size:10, speed:3,   shape:'arrow'}
-		,{size:10, speed:3,   shape:'arrowF'}
+		,{size:10, speed:3,   shape:'arrow:F'}
 		,{size:10, speed:1,   shape:'ant'}
-		,{size:10, speed:1,   shape:'antF'}
+		,{size:10, speed:1,   shape:'ant:F'}
 		];
+
 	//setup
 	for(var i=0;i<maxPopulation;i++){
 		actors[i] = {};
@@ -55,6 +57,7 @@
 		actors[i].heading = Math.random()*2*Math.PI;
 		actors[i].shape = roles[actors[i].role].shape;
 	}
+
 	//main loop
 	(loop = function(){
 		//console.time('loop');//DEBUG
@@ -79,52 +82,59 @@
 		for(var i=0;i<actors.length;i++){draw(actors[i]);}
 		//console.timeEnd('loop');//DEBUG
 	})();
-	//drawing loop
+
+	//drawing function
 	function draw(actor){
 		var s = Math.sin(actor.heading);
 		var c = Math.cos(actor.heading);
 		var r = actor.size/2;
-		if(actor.shape===undefined){actor.shape = '';}
+		if(actor.shape===undefined){actor.shape='round';}
+		var shape   = actor.shape.indexOf(':')===-1?actor.shape:actor.shape.substring(0,actor.shape.indexOf(':'));
+		var options = actor.shape.indexOf(':')===-1?'':actor.shape.substring(actor.shape.indexOf(':')+1);
 		C.beginPath();
-		if(actor.shape.substring(0,6)==='square'){
+		if(shape==='round'){
+			C.arc(actor.x, actor.y, r, 0, 2*Math.PI, true);
+		}else if(shape==='square'){
 			C.moveTo(actor.x + c * r - s * r, actor.y - s * r - c * r);
 			C.lineTo(actor.x - s * r - c * r, actor.y - c * r + s * r);
 			C.lineTo(actor.x - c * r + s * r, actor.y + s * r + c * r);
 			C.lineTo(actor.x + s * r + c * r, actor.y + c * r - s * r);
 			C.lineTo(actor.x + c * r - s * r, actor.y - s * r - c * r);
-		}else if(actor.shape.substring(0,7)==='diamond'){
+		}else if(shape==='diamond'){
 			C.moveTo(actor.x + c * r, actor.y - s * r);
 			C.lineTo(actor.x - s * r, actor.y - c * r);
 			C.lineTo(actor.x - c * r, actor.y + s * r);
 			C.lineTo(actor.x + s * r, actor.y + c * r);
 			C.lineTo(actor.x + c * r, actor.y - s * r);
-		}else if(actor.shape.substring(0,3)==='tri'){
+		}else if(shape==='tri'){
 			C.moveTo(actor.x + c * r, actor.y - s * r);
 			C.lineTo(actor.x - s * r - c * r, actor.y - c * r + s * r);
 			C.lineTo(actor.x - c * r + s * r, actor.y + s * r + c * r);
 			C.lineTo(actor.x + c * r, actor.y - s * r);
-		}else if(actor.shape.substring(0,5)==='arrow'){
+		}else if(shape==='arrow'){
 			C.moveTo(actor.x + c * r, actor.y - s * r);
 			C.lineTo(actor.x - s * r - c * r, actor.y - c * r + s * r);
 			C.lineTo(actor.x, actor.y);
 			C.lineTo(actor.x - c * r + s * r, actor.y + s * r + c * r);
 			C.lineTo(actor.x + c * r, actor.y - s * r);
-		}else if(actor.shape.substring(0,3)==='ant'){
+		}else if(shape==='ant'){
 			C.arc(actor.x + c*r/2, actor.y - s*r/2, r/3, 0, 2*Math.PI, true);
 			C.moveTo(actor.x + r/4, actor.y);
 			C.arc(actor.x, actor.y, r/4, 0, 2*Math.PI, true);
 			C.moveTo(actor.x - c*r/2+r/3, actor.y + s*r/2);
 			C.arc(actor.x - c*r/2, actor.y + s*r/2, r/3, 0, 2*Math.PI, true);
-		}else{ //default shape is circle
-			C.arc(actor.x, actor.y, r, 0, 2*Math.PI, true);
+		}else{ //warn for unknown shapes and fall back to round
+			console.warn('unknown shape: "'+actor.shape+'", falling back to "round:'+options+'"');//TODO avoid multiple warnings for same error, give info
+			actor.shape = 'round:'+options;
 		}
 		//add a trail to show speed and heading
 		C.moveTo(actor.x, actor.y);
 		C.lineTo(actor.x-actor.speed*10*c, actor.y+actor.speed*10*s);
 		//draw filled or hollow
-		if(actor.shape[actor.shape.length-1]==='F'){C.fill();}
+		if(options.match('F')){C.fill();}
 		C.stroke();
 	}
+
 	//end
 	console.timeEnd('main');
 	console.log('endSetup');
