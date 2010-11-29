@@ -42,6 +42,8 @@
 		,{size:10, speed: 0.2, shape:'triF'}
 		,{size:10, speed: 3, shape:'arrow'}
 		,{size:10, speed: 3, shape:'arrowF'}
+		,{size:10, speed: 1, shape:'ant'}
+		,{size:10, speed: 1, shape:'antF'}
 		];
 	//setup
 	for(var i=0;i<maxPopulation;i++){
@@ -56,12 +58,13 @@
 	}
 	//main loop
 	(loop = function(){
-		//DEBUG console.time('loop');
-		//DEBUG console.count('loop');
+		//console.time('loop');//DEBUG
+		//console.count('loop');//DEBUG
 		for(var i=0;i<actors.length;i++){
 			//update position
 			actors[i].x += actors[i].speed * Math.cos(actors[i].heading);
 			actors[i].y -= actors[i].speed * Math.sin(actors[i].heading);
+			actors[i].heading += actors[i].speed * Math.PI/180;//DEBUG rotation
 			//wrap the canvas
 			if(actors[i].x <= 0){actors[i].x = w;}else
 			if(actors[i].x >= w){actors[i].x = 0;}
@@ -72,8 +75,9 @@
 		}
 		//draw all actors
 		C.clearRect(0, 0, w, h);
+		C.beginPath();for(var i=100;i<w;i+=100){C.moveTo(i,0);C.lineTo(i,h);}for(var i=100;i<h;i+=100){C.moveTo(0,i);C.lineTo(w,i);}C.stroke();;//DEBUG grid
 		for(var i=0;i<actors.length;i++){draw(actors[i]);}
-		//DEBUG console.timeEnd('loop');
+		//console.timeEnd('loop');//DEBUG
 		window.setTimeout(loop, pause);
 	})();
 	//drawing loop
@@ -106,6 +110,12 @@
 			C.lineTo(actor.x, actor.y);
 			C.lineTo(actor.x - c * r + s * r, actor.y + s * r + c * r);
 			C.lineTo(actor.x + c * r, actor.y - s * r);
+		}else if(actor.shape.substring(0,3)==='ant'){
+			C.arc(actor.x + c*r/2, actor.y - s*r/2, r/3, 0, 2*Math.PI, true);
+			C.moveTo(actor.x + r/4, actor.y);
+			C.arc(actor.x, actor.y, r/4, 0, 2*Math.PI, true);
+			C.moveTo(actor.x - c*r/2+r/3, actor.y + s*r/2);
+			C.arc(actor.x - c*r/2, actor.y + s*r/2, r/3, 0, 2*Math.PI, true);
 		}else{ //default shape is circle
 			C.arc(actor.x, actor.y, r, 0, 2*Math.PI, true);
 		}
