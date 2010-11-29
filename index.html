@@ -56,9 +56,11 @@
 			//update position
 			actors[i].x += actors[i].speed * Math.cos(actors[i].heading);
 			actors[i].y -= actors[i].speed * Math.sin(actors[i].heading);
-			//keep on canvas TODO
-			if(actors[i].x < actors[i].size || actors[i].x > w-actors[i].size){actors.heading}
-			if(actors[i].y < actors[i].size || actors[i].y > h-actors[i].size){actors.heading}
+			//wrap the canvas
+			if(actors[i].x <= 0){actors[i].x = w;}else
+			if(actors[i].x >= w){actors[i].x = 0;}
+			if(actors[i].y <= 0){actors[i].y = h;}else
+			if(actors[i].y >= h){actors[i].y = 0;}
 			//keep heading in valid range
 			if(actors[i].heading >= 2*Math.PI){actors[i].heading -= 2*Math.PI;}
 		}
