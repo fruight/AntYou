@@ -33,7 +33,7 @@
 		{size:10, speed:2, ai:{
 		 	idle:function(){
 				me.stack.push(function(){me.ai.idle();});
-				me.stack.push(function(){ai.sleep(-1);});
+				me.stack.push(function(){ai.sleep();});
 				me.stack.push(function(){ai.goTo(w/2,h/2);});
 			}
 		}}
@@ -57,6 +57,7 @@
 		,goTo:function(x,y){
 			if(me.x===x && me.y===y){//TODO log info somewhere and aggregate stats
 			}else{
+				//me.stack.push(function(){ai.goTo(x,y);});//THINK this would increase correctness, but make it harder to return to original heading
 				me.stack.push(function(){ai.go(Math.sqrt(Math.pow(x-me.x,2)+Math.pow(y-me.y,2)));});
 				me.stack.push(function(){ai.turnTo(x,y);});
 			}
@@ -65,11 +66,11 @@
 			if(a){me.heading += a;}
 		}
 		,turnTo:function(x,y){
-			me.stack.push(function(){ai.turn();});//TODO
+			me.stack.push(function(){ai.turn(Math.atan((me.y-y)/(x-me.x))-me.heading+(x<me.x?Math.PI:0));});
 		}
 		,sleep:function(t){
-			if(!t){}
-			else if(t===-1){me.stack.push(function(){ai.sleep(-1);});}
+			if(t<=1){}
+			else if(t===undefined){me.stack.push(function(){ai.sleep();});}
 			else{me.stack.push(function(){ai.sleep(t-1);});}
 		}
 	}
@@ -102,11 +103,13 @@
 			if(actors[i].y <= 0){actors[i].y = h;}else
 			if(actors[i].y >= h){actors[i].y = 0;}
 			//keep heading in valid range
-			if(actors[i].heading >= 2*Math.PI){actors[i].heading -= 2*Math.PI;}
+			while(actors[i].heading >= 2*Math.PI){actors[i].heading -= 2*Math.PI;}
+			while(actors[i].heading <= 0){actors[i].heading += 2*Math.PI;}
 		}
 		//draw all actors
 		C.clearRect(0, 0, w, h);
-		C.beginPath();for(var i=100;i<w;i+=100){C.moveTo(i,0);C.lineTo(i,h);}for(var i=100;i<h;i+=100){C.moveTo(0,i);C.lineTo(w,i);}C.stroke();;//DEBUG grid
+		C.beginPath();for(var i=100;i<w;i+=100){C.moveTo(i,0);C.lineTo(i,h);}for(var i=100;i<h;i+=100){C.moveTo(0,i);C.lineTo(w,i);}C.stroke();//DEBUG grid
+		C.beginPath();C.moveTo(w/2,h/2-10);C.lineTo(w/2,h/2+10);C.moveTo(w/2-10,h/2);C.lineTo(w/2+10,h/2);C.stroke();//DEBUG center
 		for(var i=0;i<actors.length;i++){draw(actors[i]);}
 		//console.timeEnd('loop');//DEBUG
 	})();
