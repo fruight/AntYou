@@ -31,7 +31,8 @@
 	var maxPopulation = 50;
 	var actors = [];
 	var roles = [
-		 {size:10, speed:1}
+		{}
+		 /*{size:10, speed:1}
 		,{size:10, speed:1,   shape:'unknown:F'}
 		,{size:10, speed:1,   shape:':F'}
 		,{size:10, speed:4,   shape:'diamond'}
@@ -43,7 +44,7 @@
 		,{size:10, speed:3,   shape:'arrow'}
 		,{size:10, speed:3,   shape:'arrow:F'}
 		,{size:10, speed:1,   shape:'ant'}
-		,{size:10, speed:1,   shape:'ant:F'}
+		,{size:10, speed:1,   shape:'ant:F'}*///DEBUG testroles
 		];
 
 	//setup
@@ -65,9 +66,9 @@
 		window.setTimeout(loop, 1000/fps);
 		for(var i=0;i<actors.length;i++){
 			//update position
-			actors[i].x += actors[i].speed * Math.cos(actors[i].heading);
+			/*actors[i].x += actors[i].speed * Math.cos(actors[i].heading);
 			actors[i].y -= actors[i].speed * Math.sin(actors[i].heading);
-			actors[i].heading += actors[i].speed * Math.PI/180;//DEBUG rotation
+			actors[i].heading += actors[i].speed * Math.PI/180;*///DEBUG rotation
 			//wrap the canvas
 			if(actors[i].x <= 0){actors[i].x = w;}else
 			if(actors[i].x >= w){actors[i].x = 0;}
@@ -117,7 +118,7 @@
 			C.lineTo(actor.x, actor.y);
 			C.lineTo(actor.x - c * r + s * r, actor.y + s * r + c * r);
 			C.lineTo(actor.x + c * r, actor.y - s * r);
-		}else if(shape==='ant'){
+		}else if(shape==='ant'){ //TODO add legs and antennae
 			C.arc(actor.x + c*r/2, actor.y - s*r/2, r/3, 0, 2*Math.PI, true);
 			C.moveTo(actor.x + r/4, actor.y);
 			C.arc(actor.x, actor.y, r/4, 0, 2*Math.PI, true);
