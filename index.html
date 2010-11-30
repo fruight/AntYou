@@ -31,7 +31,11 @@
 	var actors = [];
 	var roles = [
 		{size:10, speed:2, ai:{
-		 	idle:function(){me.stack.push(function(){me.ai.idle();});me.stack.push(function(){ai.go(w/2,h/2);});}
+		 	idle:function(){
+				me.stack.push(function(){me.ai.idle();});
+				me.stack.push(function(){ai.sleep(-1);});
+				me.stack.push(function(){ai.goTo(w/2,h/2);});
+			}
 		}}
 		];
 
@@ -47,21 +51,26 @@
 			}else{
 				me.x += me.speed*Math.cos(me.heading);
 				me.y -= me.speed*Math.sin(me.heading);
-				me.stack.push(function(){ai.go(d-me.speed);});//FIXME expand variables and expressions when pushing actions
+				me.stack.push(function(){ai.go(d-me.speed);});
 			}
 		}
 		,goTo:function(x,y){
 			if(me.x===x && me.y===y){//TODO log info somewhere and aggregate stats
 			}else{
-				me.stack.push(function(){ai.go(Math.sqrt(Math.exp(x-me.x,2)+Math.exp(y-me.y,2)));});
+				me.stack.push(function(){ai.go(Math.sqrt(Math.pow(x-me.x,2)+Math.pow(y-me.y,2)));});
 				me.stack.push(function(){ai.turnTo(x,y);});
 			}
 		}
 		,turn:function(a){
-			me.heading += a;
+			if(a){me.heading += a;}
 		}
 		,turnTo:function(x,y){
 			me.stack.push(function(){ai.turn();});//TODO
+		}
+		,sleep:function(t){
+			if(!t){}
+			else if(t===-1){me.stack.push(function(){ai.sleep(-1);});}
+			else{me.stack.push(function(){ai.sleep(t-1);});}
 		}
 	}
 	for(var i=0;i<maxPopulation;i++){
