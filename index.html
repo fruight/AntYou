@@ -17,6 +17,8 @@
 	document.body.style.margin = '0px';
 	document.body.style.overflow = 'hidden';
 	var fps = 40;
+	var t0 = new Date().getTime();
+	var frame = 0;
 	var w = window.innerWidth;
 	var h = window.innerHeight;
 	var c = document.getElementById('c');
@@ -32,7 +34,7 @@
 	var roles = [
 		{size:15, speed:2, shape:'ant:F', ai:{
 		 	idle:function(){
-				me.log.push('idle()');//TODO dont log repeatedly and log falling asleep and add timestamp to log
+				me.log.push(frame+': idle()');//TODO dont log repeatedly and log falling asleep
 				me.stack.push(function(){me.ai.idle();});
 				me.stack.push(function(){ai.go(100);});
 				me.stack.push(function(){ai.turn(Math.random()*Math.PI-Math.PI/2);});
@@ -55,7 +57,7 @@
 	};
 	var ai = {//TODO make a global default actor that supersedes all custom roles to simplify namespace
 		go:function(d){
-			me.log.push('go('+d+')');
+			me.log.push(frame+': go('+d+')');
 			if(d<=me.speed){
 				me.x += d*Math.cos(me.heading);
 				me.y -= d*Math.sin(me.heading);
@@ -66,7 +68,7 @@
 			}
 		}
 		,goTo:function(x,y){
-			me.log.push('goTo('+x+','+y+')');
+			me.log.push(frame+': goTo('+x+','+y+')');
 			if(me.x===x && me.y===y){
 			}else{
 				me.stack.push(function(){ai.slideTo(x,y);});
@@ -75,7 +77,7 @@
 			}
 		}
 		,slide:function(a,d){//THINK call it 'strafing' instead?
-			me.log.push('slide('+a+','+d+')');
+			me.log.push(frame+': slide('+a+','+d+')');
 			var speed = me.speed/5;
 			if(d<=speed){
 				me.x += d*Math.cos(me.heading+a);
@@ -90,7 +92,7 @@
 				me.stack.push(function(){ai.slide(get.angleTo(x,y),get.distanceTo(x,y));});
 		}
 		,turn:function(a){
-			me.log.push('turn('+a+')');
+			me.log.push(frame+': turn('+a+')');
 			var t=me.speed*Math.PI/90;
 			if(Math.abs(a)<=t){
 				me.heading += a;
@@ -103,11 +105,11 @@
 			}
 		}
 		,turnTo:function(x,y){
-			me.log.push('turnTo('+x+','+y+')');
+			me.log.push(frame+': turnTo('+x+','+y+')');
 			me.stack.push(function(){ai.turn(get.angleTo(x,y));});
 		}
 		,sleep:function(t){
-			if(t<=1){me.log.push('wakeup');}
+			if(t<=1){me.log.push(frame+': wakeup');}
 			else if(t===undefined){me.stack.push(function(){ai.sleep();});}
 			else{me.stack.push(function(){ai.sleep(t-1);});}
 		}
@@ -124,7 +126,7 @@
 		actors[i].shape   = roles[actors[i].role].shape;
 		actors[i].ai      = roles[actors[i].role].ai;
 		actors[i].stack   = [function(){me.ai.idle();}];
-		actors[i].log     = ['init'];
+		actors[i].log     = [frame+': init'];
 	}
 
 	//main loop
@@ -132,6 +134,8 @@
 		//console.time('loop');//DEBUG
 		//console.count('loop');//DEBUG
 		window.setTimeout(loop, 1000/fps);
+		t = new Date().getTime()-t0;
+		frame++;
 		for(var i=0;i<actors.length;i++){
 			//calculate actions
 			me=actors[i];
@@ -149,6 +153,7 @@
 		C.clearRect(0, 0, w, h);
 		//C.beginPath();for(var i=100;i<w;i+=100){C.moveTo(i,0);C.lineTo(i,h);}for(var i=100;i<h;i+=100){C.moveTo(0,i);C.lineTo(w,i);}C.stroke();//DEBUG grid
 		//C.beginPath();C.moveTo(w/2,h/2-10);C.lineTo(w/2,h/2+10);C.moveTo(w/2-10,h/2);C.lineTo(w/2+10,h/2);C.stroke();//DEBUG center
+		C.fillText('time:'+t+' ms | fps:'+(frame/t*1000),10,10);//TODO draw light background to make sure visibility
 		for(var i=0;i<actors.length;i++){draw(actors[i]);}
 		//console.timeEnd('loop');//DEBUG
 	})();
