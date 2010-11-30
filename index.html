@@ -32,9 +32,10 @@
 	var roles = [
 		{size:10, speed:2, ai:{
 		 	idle:function(){
+				me.log.push('idle()');//TODO dont log repeatedly and log falling asleep and add timestamp to log
 				me.stack.push(function(){me.ai.idle();});
-				me.stack.push(function(){ai.sleep();});
-				me.stack.push(function(){ai.goTo(w/2,h/2);});
+				me.stack.push(function(){ai.go(100);});
+				me.stack.push(function(){ai.turn(Math.random()*Math.PI-Math.PI/2);});
 			}
 		}}
 		];
@@ -43,8 +44,18 @@
 
 	//global ai functions
 	var me = undefined;
+	var get = {
+		angleTo:function(x,y){
+			var t=Math.atan((me.y-y)/(x-me.x))-me.heading+(x<me.x?Math.PI:0);
+			return t>Math.PI?t-2*Math.PI:(t<-Math.PI?t+2*Math.PI:t);
+		}
+		,distanceTo:function(x,y){
+			return Math.sqrt(Math.pow(x-me.x,2)+Math.pow(y-me.y,2));
+		}
+	};
 	var ai = {//TODO make a global default actor that supersedes all custom roles to simplify namespace
 		go:function(d){
+			me.log.push('go('+d+')');
 			if(d<=me.speed){
 				me.x += d*Math.cos(me.heading);
 				me.y -= d*Math.sin(me.heading);
@@ -55,16 +66,32 @@
 			}
 		}
 		,goTo:function(x,y){
-			if(me.x===x && me.y===y){//TODO log info somewhere and aggregate stats
+			me.log.push('goTo('+x+','+y+')');
+			if(me.x===x && me.y===y){
 			}else{
-				//me.stack.push(function(){ai.goTo(x,y);});//THINK this would increase correctness, but make it harder to return to original heading
+				me.stack.push(function(){ai.slideTo(x,y);});
 				me.stack.push(function(){ai.go(Math.sqrt(Math.pow(x-me.x,2)+Math.pow(y-me.y,2)));});
 				me.stack.push(function(){ai.turnTo(x,y);});
 			}
 		}
+		,slide:function(a,d){//THINK call it 'strafing' instead?
+			me.log.push('slide('+a+','+d+')');
+			var speed = me.speed/5;
+			if(d<=speed){
+				me.x += d*Math.cos(me.heading+a);
+				me.y -= d*Math.sin(me.heading+a);
+			}else{
+				me.x += speed*Math.cos(me.heading+a);
+				me.y -= speed*Math.sin(me.heading+a);
+				me.stack.push(function(){ai.slide(a,d-speed);});
+			}
+		}
+		,slideTo:function(x,y){
+				me.stack.push(function(){ai.slide(get.angleTo(x,y),get.distanceTo(x,y));});
+		}
 		,turn:function(a){
+			me.log.push('turn('+a+')');
 			var t=me.speed*Math.PI/90;
-			//a=a>Math.PI?a-2*Math.PI:(a<-Math.PI?a+2*Math.PI:a);//THINK always take shorter turn, generally better, but might not be expected
 			if(Math.abs(a)<=t){
 				me.heading += a;
 			}else if(a>0){
@@ -76,12 +103,11 @@
 			}
 		}
 		,turnTo:function(x,y){
-			var t=Math.atan((me.y-y)/(x-me.x))-me.heading+(x<me.x?Math.PI:0);
-			t=t>Math.PI?t-2*Math.PI:(t<-Math.PI?t+2*Math.PI:t);
-			me.stack.push(function(){ai.turn(t);});
+			me.log.push('turnTo('+x+','+y+')');
+			me.stack.push(function(){ai.turn(get.angleTo(x,y));});
 		}
 		,sleep:function(t){
-			if(t<=1){}
+			if(t<=1){me.log.push('wakeup');}
 			else if(t===undefined){me.stack.push(function(){ai.sleep();});}
 			else{me.stack.push(function(){ai.sleep(t-1);});}
 		}
@@ -98,6 +124,7 @@
 		actors[i].shape   = roles[actors[i].role].shape;
 		actors[i].ai      = roles[actors[i].role].ai;
 		actors[i].stack   = [function(){me.ai.idle();}];
+		actors[i].log     = ['init'];
 	}
 
 	//main loop
