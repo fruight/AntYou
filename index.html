@@ -18,6 +18,8 @@
 	document.body.style.overflow = 'hidden';
 	var fps = 40;
 	var t0 = new Date().getTime();
+	var dt = 0;
+	var now = t0;
 	var frame = 0;
 	var w = window.innerWidth;
 	var h = window.innerHeight;
@@ -134,7 +136,8 @@
 		//console.time('loop');//DEBUG
 		//console.count('loop');//DEBUG
 		window.setTimeout(loop, 1000/fps);
-		t = new Date().getTime()-t0;
+		dt = new Date().getTime()-t0-now;
+		now += dt ;
 		frame++;
 		for(var i=0;i<actors.length;i++){
 			//calculate actions
@@ -153,8 +156,9 @@
 		C.clearRect(0, 0, w, h);
 		//C.beginPath();for(var i=100;i<w;i+=100){C.moveTo(i,0);C.lineTo(i,h);}for(var i=100;i<h;i+=100){C.moveTo(0,i);C.lineTo(w,i);}C.stroke();//DEBUG grid
 		//C.beginPath();C.moveTo(w/2,h/2-10);C.lineTo(w/2,h/2+10);C.moveTo(w/2-10,h/2);C.lineTo(w/2+10,h/2);C.stroke();//DEBUG center
-		C.fillText('time:'+t+' ms | fps:'+(frame/t*1000),10,10);//TODO draw light background to make sure visibility
 		for(var i=0;i<actors.length;i++){draw(actors[i]);}
+		C.clearRect(0,0,250,10);
+		C.fillText('time:'+now+' ms | frame:'+frame+' | fps:'+(Math.round(frame*100000/now)/100)+' | fps0:'+(Math.round(1000000/dt)/1000),2,8);//TODO stop fps flickering
 		//console.timeEnd('loop');//DEBUG
 	})();
 
