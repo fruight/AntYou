@@ -6,8 +6,7 @@
 	<body>
 		<canvas id='c'></canvas>
 		<script type='application/javascript'>
-/* author:	fruight
- * email:	fruight@gmail.com
+/* author:	fruight<fruight@gmail.com>
  * 
  * AI-game inspired by AntMe
 */
@@ -28,35 +27,55 @@
 	c.style.height = '100%';
 
 	//settings
-	var maxPopulation = 50;
+	var maxPopulation = 1;
 	var actors = [];
 	var roles = [
-		{}
-		 /*{size:10, speed:1}
-		,{size:10, speed:1,   shape:'unknown:F'}
-		,{size:10, speed:1,   shape:':F'}
-		,{size:10, speed:4,   shape:'diamond'}
-		,{size:10, speed:4,   shape:'diamond:F'}
-		,{size:10, speed:2,   shape:'square'}
-		,{size:10, speed:2,   shape:'square:F'}
-		,{size:10, speed:0.5, shape:'tri'}
-		,{size:10, speed:0.5, shape:'tri:F'}
-		,{size:10, speed:3,   shape:'arrow'}
-		,{size:10, speed:3,   shape:'arrow:F'}
-		,{size:10, speed:1,   shape:'ant'}
-		,{size:10, speed:1,   shape:'ant:F'}*///DEBUG testroles
+		{size:10, speed:2, ai:{
+		 	idle:function(){me.stack.push(function(){me.ai.idle();});me.stack.push(function(){ai.go(w/2,h/2);});}
+		}}
 		];
 
 	//setup
+
+	//global ai functions
+	var me = undefined;
+	var ai = {
+		go:function(d){
+			if(d<=me.speed){
+				me.x += d*Math.sin(me.heading);
+				me.y -= d*Math.sin(me.heading);
+			}else{
+				me.x += me.speed*Math.sin(me.heading);
+				me.y -= me.speed*Math.sin(me.heading);
+				me.stack.push(function(){ai.go(d-me.speed);});
+			}
+		}
+		,goTo:function(x,y){
+			if(me.x===x && me.y===y){//TODO log info somewhere and aggregate stats
+			}else{
+				me.stack.push(function(){ai.go(Math.sqrt(Math.exp(x-me.x,2)+Math.exp(y-me.y,2)));});
+				me.stack.push(function(){ai.turnTo(x,y);});
+			}
+		}
+		,turn:function(a){
+			//TODO
+		}
+		,turnTo:function(x,y){
+			me.stack.push(function(){ai.turn();});//TODO
+		}
+	}
 	for(var i=0;i<maxPopulation;i++){
 		actors[i] = {};
-		actors[i].role = Math.floor(Math.random()*roles.length);
-		actors[i].size = roles[actors[i].role].size;
-		actors[i].speed = roles[actors[i].role].speed;
-		actors[i].x = Math.random()*w;
-		actors[i].y = Math.random()*h;
+		actors[i].info    = {'i':i};
+		actors[i].x       = Math.random()*w;
+		actors[i].y       = Math.random()*h;
 		actors[i].heading = Math.random()*2*Math.PI;
-		actors[i].shape = roles[actors[i].role].shape;
+		actors[i].role    = Math.floor(Math.random()*roles.length);
+		actors[i].size    = roles[actors[i].role].size;
+		actors[i].speed   = roles[actors[i].role].speed;
+		actors[i].shape   = roles[actors[i].role].shape;
+		actors[i].ai      = roles[actors[i].role].ai;
+		actors[i].stack   = [function(){me.ai.idle();}];
 	}
 
 	//main loop
@@ -65,10 +84,9 @@
 		//console.count('loop');//DEBUG
 		window.setTimeout(loop, 1000/fps);
 		for(var i=0;i<actors.length;i++){
-			//update position
-			/*actors[i].x += actors[i].speed * Math.cos(actors[i].heading);
-			actors[i].y -= actors[i].speed * Math.sin(actors[i].heading);
-			actors[i].heading += actors[i].speed * Math.PI/180;*///DEBUG rotation
+			//calculate actions
+			me=actors[i];
+			actors[i].stack.pop()();
 			//wrap the canvas
 			if(actors[i].x <= 0){actors[i].x = w;}else
 			if(actors[i].x >= w){actors[i].x = 0;}
