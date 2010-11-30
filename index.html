@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>kaim</title>
+		<title>AntYou</title>
 	</head>
 	<body>
 		<canvas id='c'></canvas>
@@ -27,10 +27,10 @@
 	c.style.height = '100%';
 
 	//settings
-	var maxPopulation = 1;
+	var maxPopulation = 500;
 	var actors = [];
 	var roles = [
-		{size:10, speed:2, ai:{
+		{size:15, speed:2, shape:'ant:F', ai:{
 		 	idle:function(){
 				me.log.push('idle()');//TODO dont log repeatedly and log falling asleep and add timestamp to log
 				me.stack.push(function(){me.ai.idle();});
@@ -137,18 +137,18 @@
 			me=actors[i];
 			actors[i].stack.pop()();
 			//wrap the canvas
-			if(actors[i].x <= 0){actors[i].x = w;}else
-			if(actors[i].x >= w){actors[i].x = 0;}
-			if(actors[i].y <= 0){actors[i].y = h;}else
-			if(actors[i].y >= h){actors[i].y = 0;}
+			if(actors[i].x < 0){actors[i].x = w;}else
+			if(actors[i].x > w){actors[i].x = 0;}
+			if(actors[i].y < 0){actors[i].y = h;}else
+			if(actors[i].y > h){actors[i].y = 0;}
 			//keep heading in valid range
 			while(actors[i].heading >= 2*Math.PI){actors[i].heading -= 2*Math.PI;}
 			while(actors[i].heading <= 0){actors[i].heading += 2*Math.PI;}
 		}
 		//draw all actors
 		C.clearRect(0, 0, w, h);
-		C.beginPath();for(var i=100;i<w;i+=100){C.moveTo(i,0);C.lineTo(i,h);}for(var i=100;i<h;i+=100){C.moveTo(0,i);C.lineTo(w,i);}C.stroke();//DEBUG grid
-		C.beginPath();C.moveTo(w/2,h/2-10);C.lineTo(w/2,h/2+10);C.moveTo(w/2-10,h/2);C.lineTo(w/2+10,h/2);C.stroke();//DEBUG center
+		//C.beginPath();for(var i=100;i<w;i+=100){C.moveTo(i,0);C.lineTo(i,h);}for(var i=100;i<h;i+=100){C.moveTo(0,i);C.lineTo(w,i);}C.stroke();//DEBUG grid
+		//C.beginPath();C.moveTo(w/2,h/2-10);C.lineTo(w/2,h/2+10);C.moveTo(w/2-10,h/2);C.lineTo(w/2+10,h/2);C.stroke();//DEBUG center
 		for(var i=0;i<actors.length;i++){draw(actors[i]);}
 		//console.timeEnd('loop');//DEBUG
 	})();
@@ -193,13 +193,17 @@
 			C.arc(actor.x, actor.y, r/4, 0, 2*Math.PI, true);
 			C.moveTo(actor.x - c*r/2+r/3, actor.y + s*r/2);
 			C.arc(actor.x - c*r/2, actor.y + s*r/2, r/3, 0, 2*Math.PI, true);
+			C.moveTo(actor.x - s*r, actor.y - c*r);
+			C.lineTo(actor.x + s*r, actor.y + c*r);
+			C.moveTo(actor.x - s*r - c*r/2, actor.y - c*r + s*r/2);
+			C.lineTo(actor.x + s*r + c*r/2, actor.y + c*r - s*r/2);
+			C.moveTo(actor.x - s*r + c*r/2, actor.y - c*r - s*r/2);
+			C.lineTo(actor.x + s*r - c*r/2, actor.y + c*r + s*r/2);
 		}else{ //warn for unknown shapes and fall back to round
 			console.warn('unknown shape: "'+actor.shape+'", falling back to "round:'+options+'"');//TODO avoid multiple warnings for same error, give info
 			actor.shape = 'round:'+options;
 		}
-		//add a trail to show speed and heading
-		C.moveTo(actor.x, actor.y);
-		C.lineTo(actor.x-actor.speed*10*c, actor.y+actor.speed*10*s);
+		//C.moveTo(actor.x, actor.y);C.lineTo(actor.x-actor.speed*10*c, actor.y+actor.speed*10*s);//DEBUG add a trail to show speed and heading
 		//draw filled or hollow
 		if(options.match('F')){C.fill();}
 		C.stroke();
