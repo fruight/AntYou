@@ -63,10 +63,22 @@
 			}
 		}
 		,turn:function(a){
-			if(a){me.heading += a;}
+			var t=me.speed*Math.PI/90;
+			//a=a>Math.PI?a-2*Math.PI:(a<-Math.PI?a+2*Math.PI:a);//THINK always take shorter turn, generally better, but might not be expected
+			if(Math.abs(a)<=t){
+				me.heading += a;
+			}else if(a>0){
+				me.heading += t;
+				me.stack.push(function(){ai.turn(a-t);});
+			}else{
+				me.heading -= t;
+				me.stack.push(function(){ai.turn(a+t);});
+			}
 		}
 		,turnTo:function(x,y){
-			me.stack.push(function(){ai.turn(Math.atan((me.y-y)/(x-me.x))-me.heading+(x<me.x?Math.PI:0));});
+			var t=Math.atan((me.y-y)/(x-me.x))-me.heading+(x<me.x?Math.PI:0);
+			t=t>Math.PI?t-2*Math.PI:(t<-Math.PI?t+2*Math.PI:t);
+			me.stack.push(function(){ai.turn(t);});
 		}
 		,sleep:function(t){
 			if(t<=1){}
