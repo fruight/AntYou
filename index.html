@@ -39,15 +39,15 @@
 
 	//global ai functions
 	var me = undefined;
-	var ai = {
+	var ai = {//TODO make a global default actor that supersedes all custom roles to simplify namespace
 		go:function(d){
 			if(d<=me.speed){
-				me.x += d*Math.sin(me.heading);
+				me.x += d*Math.cos(me.heading);
 				me.y -= d*Math.sin(me.heading);
 			}else{
-				me.x += me.speed*Math.sin(me.heading);
+				me.x += me.speed*Math.cos(me.heading);
 				me.y -= me.speed*Math.sin(me.heading);
-				me.stack.push(function(){ai.go(d-me.speed);});
+				me.stack.push(function(){ai.go(d-me.speed);});//FIXME expand variables and expressions when pushing actions
 			}
 		}
 		,goTo:function(x,y){
@@ -58,7 +58,7 @@
 			}
 		}
 		,turn:function(a){
-			//TODO
+			me.heading += a;
 		}
 		,turnTo:function(x,y){
 			me.stack.push(function(){ai.turn();});//TODO
