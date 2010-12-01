@@ -16,11 +16,6 @@
 	//init
 	document.body.style.margin = '0px';
 	document.body.style.overflow = 'hidden';
-	var fps = 40;
-	var t0 = new Date().getTime();
-	var dt = 0;
-	var now = t0;
-	var frame = 0;
 	var w = window.innerWidth;
 	var h = window.innerHeight;
 	var c = document.getElementById('c');
@@ -29,14 +24,23 @@
 	c.height = h;
 	c.style.width = '100%';
 	c.style.height = '100%';
+	var stats = {
+		t0:new Date().getTime()
+		,now:new Date().getTime()
+		,dt:0
+		,frame:0
+		,fps:0
+	}
+	var config = {
+		fps:40
+		,maxPopulation:500
+	}
 
 	//settings
-	var maxPopulation = 500;
-	var actors = [];
 	var roles = [
 		{size:15, speed:2, shape:'ant:F', ai:{
 		 	idle:function(){
-				me.log.push(frame+': idle()');//TODO dont log repeatedly and log falling asleep
+				me.log.push(stats.frame+': idle()');//TODO dont log repeatedly and log falling asleep
 				me.stack.push(function(){me.ai.idle();});
 				me.stack.push(function(){ai.go(100);});
 				me.stack.push(function(){ai.turn(Math.random()*Math.PI-Math.PI/2);});
@@ -44,10 +48,7 @@
 		}}
 		];
 
-	//setup
-
 	//global ai functions
-	var me = undefined;
 	var get = {
 		angleTo:function(x,y){
 			var t=Math.atan((me.y-y)/(x-me.x))-me.heading+(x<me.x?Math.PI:0);
@@ -59,7 +60,7 @@
 	};
 	var ai = {//TODO make a global default actor that supersedes all custom roles to simplify namespace
 		go:function(d){
-			me.log.push(frame+': go('+d+')');
+			me.log.push(stats.frame+': go('+d+')');
 			if(d<=me.speed){
 				me.x += d*Math.cos(me.heading);
 				me.y -= d*Math.sin(me.heading);
@@ -70,7 +71,7 @@
 			}
 		}
 		,goTo:function(x,y){
-			me.log.push(frame+': goTo('+x+','+y+')');
+			me.log.push(stats.frame+': goTo('+x+','+y+')');
 			if(me.x===x && me.y===y){
 			}else{
 				me.stack.push(function(){ai.slideTo(x,y);});
@@ -79,7 +80,7 @@
 			}
 		}
 		,slide:function(a,d){//THINK call it 'strafing' instead?
-			me.log.push(frame+': slide('+a+','+d+')');
+			me.log.push(stats.frame+': slide('+a+','+d+')');
 			var speed = me.speed/5;
 			if(d<=speed){
 				me.x += d*Math.cos(me.heading+a);
@@ -94,7 +95,7 @@
 				me.stack.push(function(){ai.slide(get.angleTo(x,y),get.distanceTo(x,y));});
 		}
 		,turn:function(a){
-			me.log.push(frame+': turn('+a+')');
+			me.log.push(stats.frame+': turn('+a+')');
 			var t=me.speed*Math.PI/90;
 			if(Math.abs(a)<=t){
 				me.heading += a;
@@ -107,18 +108,22 @@
 			}
 		}
 		,turnTo:function(x,y){
-			me.log.push(frame+': turnTo('+x+','+y+')');
+			me.log.push(stats.frame+': turnTo('+x+','+y+')');
 			me.stack.push(function(){ai.turn(get.angleTo(x,y));});
 		}
 		,sleep:function(t){
-			if(t<=1){me.log.push(frame+': wakeup');}
+			if(t<=1){me.log.push(stats.frame+': wakeup');}
 			else if(t===undefined){me.stack.push(function(){ai.sleep();});}
 			else{me.stack.push(function(){ai.sleep(t-1);});}
 		}
 	}
-	for(var i=0;i<maxPopulation;i++){
+
+	//setup
+	var actors = [];
+	var me = undefined;
+	for(var i=0;i<config.maxPopulation;i++){
 		actors[i] = {};
-		actors[i].info    = {'i':i};
+		actors[i].i       = i;
 		actors[i].x       = Math.random()*w;
 		actors[i].y       = Math.random()*h;
 		actors[i].heading = Math.random()*2*Math.PI;
@@ -128,17 +133,17 @@
 		actors[i].shape   = roles[actors[i].role].shape;
 		actors[i].ai      = roles[actors[i].role].ai;
 		actors[i].stack   = [function(){me.ai.idle();}];
-		actors[i].log     = [frame+': init'];
+		actors[i].log     = [stats.frame+': init'];
 	}
 
 	//main loop
 	(loop = function(){
 		//console.time('loop');//DEBUG
 		//console.count('loop');//DEBUG
-		window.setTimeout(loop, 1000/fps);
-		dt = new Date().getTime()-t0-now;
-		now += dt ;
-		frame++;
+		window.setTimeout(loop, 1000/config.fps);
+		stats.dt = new Date().getTime()-stats.t0-stats.now;
+		stats.now += stats.dt ;
+		stats.frame++;
 		for(var i=0;i<actors.length;i++){
 			//calculate actions
 			me=actors[i];
@@ -158,7 +163,7 @@
 		//C.beginPath();C.moveTo(w/2,h/2-10);C.lineTo(w/2,h/2+10);C.moveTo(w/2-10,h/2);C.lineTo(w/2+10,h/2);C.stroke();//DEBUG center
 		for(var i=0;i<actors.length;i++){draw(actors[i]);}
 		C.clearRect(0,0,260,10);
-		C.fillText('time:'+now+' ms | frame:'+frame+' | fps:'+(Math.round(frame*100000/now)/100)+' | fps0:'+(Math.round(1000000/dt)/1000),2,9);//TODO stop fps flickering
+		C.fillText('time:'+stats.now+' ms | frame:'+stats.frame+' | fps:'+(Math.round(stats.frame*100000/stats.now)/100)+' | fps0:'+(Math.round(1000000/stats.dt)/1000),2,9);//TODO stop fps flickering
 		//console.timeEnd('loop');//DEBUG
 	})();
 
