@@ -24,12 +24,15 @@
 	c.height = h;
 	c.style.width = '100%';
 	c.style.height = '100%';
-	var stats = {
+	var sys = {
 		t0:new Date().getTime()
-		,now:new Date().getTime()
+		,now:0
 		,dt:0
 		,frame:0
+		,tick:0
 		,fps:0
+		,tps:0
+		,drw:0
 	}
 	var config = {
 		fps:40
@@ -42,7 +45,7 @@
 	var roles = [
 		{size:15, speed:2, shape:'ant:F', ai:{
 		 	idle:function(){
-				me.log.push(stats.frame+': idle()');//TODO dont log repeatedly and log falling asleep
+				me.log.push(sys.frame+': idle()');//TODO dont log repeatedly and log falling asleep
 				me.stack.push(function(){me.ai.idle();});
 				me.stack.push(function(){ai.go(100);});
 				me.stack.push(function(){ai.turn(Math.random()*Math.PI-Math.PI/2);});
@@ -62,7 +65,7 @@
 	};
 	var ai = {//TODO make a global default actor that supersedes all custom roles to simplify namespace
 		go:function(d){
-			me.log.push(stats.frame+': go('+d+')');
+			me.log.push(sys.frame+': go('+d+')');
 			if(d<=me.speed){
 				me.x += d*Math.cos(me.heading);
 				me.y -= d*Math.sin(me.heading);
@@ -73,7 +76,7 @@
 			}
 		}
 		,goTo:function(x,y){
-			me.log.push(stats.frame+': goTo('+x+','+y+')');
+			me.log.push(sys.frame+': goTo('+x+','+y+')');
 			if(me.x===x && me.y===y){
 			}else{
 				me.stack.push(function(){ai.slideTo(x,y);});
@@ -82,7 +85,7 @@
 			}
 		}
 		,slide:function(a,d){//THINK call it 'strafing' instead?
-			me.log.push(stats.frame+': slide('+a+','+d+')');
+			me.log.push(sys.frame+': slide('+a+','+d+')');
 			var speed = me.speed/5;
 			if(d<=speed){
 				me.x += d*Math.cos(me.heading+a);
@@ -97,7 +100,7 @@
 				me.stack.push(function(){ai.slide(get.angleTo(x,y),get.distanceTo(x,y));});
 		}
 		,turn:function(a){
-			me.log.push(stats.frame+': turn('+a+')');
+			me.log.push(sys.frame+': turn('+a+')');
 			var t=me.speed*Math.PI/90;
 			if(Math.abs(a)<=t){
 				me.heading += a;
@@ -110,11 +113,11 @@
 			}
 		}
 		,turnTo:function(x,y){
-			me.log.push(stats.frame+': turnTo('+x+','+y+')');
+			me.log.push(sys.frame+': turnTo('+x+','+y+')');
 			me.stack.push(function(){ai.turn(get.angleTo(x,y));});
 		}
 		,sleep:function(t){
-			if(t<=1){me.log.push(stats.frame+': wakeup');}
+			if(t<=1){me.log.push(sys.frame+': wakeup');}
 			else if(t===undefined){me.stack.push(function(){ai.sleep();});}
 			else{me.stack.push(function(){ai.sleep(t-1);});}
 		}
@@ -135,17 +138,17 @@
 		actors[i].shape   = roles[actors[i].role].shape;
 		actors[i].ai      = roles[actors[i].role].ai;
 		actors[i].stack   = [function(){me.ai.idle();}];
-		actors[i].log     = [stats.frame+': init'];
+		actors[i].log     = [sys.frame+': init'];
 	}
 
 	//main loop
 	(loop = function(){
 		//console.time('loop');//DEBUG
 		//console.count('loop');//DEBUG
-		window.setTimeout(loop, 1000/config.fps);
-		stats.dt = new Date().getTime()-stats.t0-stats.now;
-		stats.now += stats.dt ;
-		stats.frame++;
+		window.setTimeout(loop, 1000/config.tps);
+		sys.dt = new Date().getTime()-sys.t0-sys.now;
+		sys.now += sys.dt ;
+		sys.tick++;
 		for(var i=0;i<actors.length;i++){
 			//calculate actions
 			me=actors[i];
@@ -160,13 +163,15 @@
 			while(actors[i].heading >= 2*Math.PI){actors[i].heading -= 2*Math.PI;}
 			while(actors[i].heading <= 0){actors[i].heading += 2*Math.PI;}
 		}
-		draw();
+		sys.drw+=config.fpt;
+		if(sys.drw>=1){sys.drw=0;draw();}
 		//draw all actors
 		//console.timeEnd('loop');//DEBUG
 	})();
 
 	//drawing function
 	function draw(){
+		sys.frame++;
 		C.clearRect(0, 0, w, h);
 		//C.beginPath();for(var i=100;i<w;i+=100){C.moveTo(i,0);C.lineTo(i,h);}for(var i=100;i<h;i+=100){C.moveTo(0,i);C.lineTo(w,i);}C.stroke();//DEBUG grid
 		//C.beginPath();C.moveTo(w/2,h/2-10);C.lineTo(w/2,h/2+10);C.moveTo(w/2-10,h/2);C.lineTo(w/2+10,h/2);C.stroke();//DEBUG center
@@ -227,7 +232,7 @@
 			C.stroke();
 		}
 		C.clearRect(0,0,260,10);
-		C.fillText('time:'+stats.now+' ms | frame:'+stats.frame+' | fps:'+(Math.round(stats.fps=(stats.fps*49+100000/stats.dt)/50)/100),2,9);
+		C.fillText('time:'+(sys.now/1000)+' s | frame:'+sys.frame+' | tick:'+sys.tick+' | fps:'+(Math.round(sys.fps=(sys.fps*49+100000/sys.dt)/50)/100),2,9);//FIXME fix fps and add tps
 	}
 
 	//end
