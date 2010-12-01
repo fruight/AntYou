@@ -225,9 +225,9 @@
 			//draw filled or hollow
 			if(options.match('F')){C.fill();}
 			C.stroke();
-			C.clearRect(0,0,260,10);
-			C.fillText('time:'+stats.now+' ms | frame:'+stats.frame+' | fps:'+(Math.round(stats.fps=(stats.fps*49+100000/stats.dt)/50)/100),2,9);
 		}
+		C.clearRect(0,0,260,10);
+		C.fillText('time:'+stats.now+' ms | frame:'+stats.frame+' | fps:'+(Math.round(stats.fps=(stats.fps*49+100000/stats.dt)/50)/100),2,9);
 	}
 
 	//end
