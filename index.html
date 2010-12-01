@@ -148,6 +148,7 @@
 			//calculate actions
 			me=actors[i];
 			actors[i].stack.pop()();
+			while(actors[i].log.length>=2000){actors[i].log.shift();}//limit logsize
 			//wrap the canvas
 			if(actors[i].x < 0){actors[i].x = w;}else
 			if(actors[i].x > w){actors[i].x = 0;}
@@ -163,7 +164,7 @@
 		//C.beginPath();C.moveTo(w/2,h/2-10);C.lineTo(w/2,h/2+10);C.moveTo(w/2-10,h/2);C.lineTo(w/2+10,h/2);C.stroke();//DEBUG center
 		for(var i=0;i<actors.length;i++){draw(actors[i]);}
 		C.clearRect(0,0,260,10);
-		C.fillText('time:'+stats.now+' ms | frame:'+stats.frame+' | fps:'+(Math.round(stats.frame*100000/stats.now)/100)+' | fps0:'+(Math.round(1000000/stats.dt)/1000),2,9);//TODO stop fps flickering
+		C.fillText('time:'+stats.now+' ms | frame:'+stats.frame+' | fps:'+(Math.round(stats.fps=(stats.fps*49+100000/stats.dt)/50)/100),2,9);
 		//console.timeEnd('loop');//DEBUG
 	})();
 
