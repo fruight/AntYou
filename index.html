@@ -33,6 +33,8 @@
 	}
 	var config = {
 		fps:40
+		,fpt:1
+		,tps:40
 		,maxPopulation:500
 	}
 
@@ -158,70 +160,74 @@
 			while(actors[i].heading >= 2*Math.PI){actors[i].heading -= 2*Math.PI;}
 			while(actors[i].heading <= 0){actors[i].heading += 2*Math.PI;}
 		}
+		draw();
 		//draw all actors
-		C.clearRect(0, 0, w, h);
-		//C.beginPath();for(var i=100;i<w;i+=100){C.moveTo(i,0);C.lineTo(i,h);}for(var i=100;i<h;i+=100){C.moveTo(0,i);C.lineTo(w,i);}C.stroke();//DEBUG grid
-		//C.beginPath();C.moveTo(w/2,h/2-10);C.lineTo(w/2,h/2+10);C.moveTo(w/2-10,h/2);C.lineTo(w/2+10,h/2);C.stroke();//DEBUG center
-		for(var i=0;i<actors.length;i++){draw(actors[i]);}
-		C.clearRect(0,0,260,10);
-		C.fillText('time:'+stats.now+' ms | frame:'+stats.frame+' | fps:'+(Math.round(stats.fps=(stats.fps*49+100000/stats.dt)/50)/100),2,9);
 		//console.timeEnd('loop');//DEBUG
 	})();
 
 	//drawing function
-	function draw(actor){
-		var s = Math.sin(actor.heading);
-		var c = Math.cos(actor.heading);
-		var r = actor.size/2;
-		if(actor.shape===undefined){actor.shape='round';}
-		var shape   = actor.shape.indexOf(':')===-1?actor.shape:actor.shape.substring(0,actor.shape.indexOf(':'));
-		var options = actor.shape.indexOf(':')===-1?'':actor.shape.substring(actor.shape.indexOf(':')+1);
-		C.beginPath();
-		if(shape==='round'){
-			C.arc(actor.x, actor.y, r, 0, 2*Math.PI, true);
-		}else if(shape==='square'){
-			C.moveTo(actor.x + c * r - s * r, actor.y - s * r - c * r);
-			C.lineTo(actor.x - s * r - c * r, actor.y - c * r + s * r);
-			C.lineTo(actor.x - c * r + s * r, actor.y + s * r + c * r);
-			C.lineTo(actor.x + s * r + c * r, actor.y + c * r - s * r);
-			C.lineTo(actor.x + c * r - s * r, actor.y - s * r - c * r);
-		}else if(shape==='diamond'){
-			C.moveTo(actor.x + c * r, actor.y - s * r);
-			C.lineTo(actor.x - s * r, actor.y - c * r);
-			C.lineTo(actor.x - c * r, actor.y + s * r);
-			C.lineTo(actor.x + s * r, actor.y + c * r);
-			C.lineTo(actor.x + c * r, actor.y - s * r);
-		}else if(shape==='tri'){
-			C.moveTo(actor.x + c * r, actor.y - s * r);
-			C.lineTo(actor.x - s * r - c * r, actor.y - c * r + s * r);
-			C.lineTo(actor.x - c * r + s * r, actor.y + s * r + c * r);
-			C.lineTo(actor.x + c * r, actor.y - s * r);
-		}else if(shape==='arrow'){
-			C.moveTo(actor.x + c * r, actor.y - s * r);
-			C.lineTo(actor.x - s * r - c * r, actor.y - c * r + s * r);
-			C.lineTo(actor.x, actor.y);
-			C.lineTo(actor.x - c * r + s * r, actor.y + s * r + c * r);
-			C.lineTo(actor.x + c * r, actor.y - s * r);
-		}else if(shape==='ant'){ //TODO add legs and antennae
-			C.arc(actor.x + c*r/2, actor.y - s*r/2, r/3, 0, 2*Math.PI, true);
-			C.moveTo(actor.x + r/4, actor.y);
-			C.arc(actor.x, actor.y, r/4, 0, 2*Math.PI, true);
-			C.moveTo(actor.x - c*r/2+r/3, actor.y + s*r/2);
-			C.arc(actor.x - c*r/2, actor.y + s*r/2, r/3, 0, 2*Math.PI, true);
-			C.moveTo(actor.x - s*r, actor.y - c*r);
-			C.lineTo(actor.x + s*r, actor.y + c*r);
-			C.moveTo(actor.x - s*r - c*r/2, actor.y - c*r + s*r/2);
-			C.lineTo(actor.x + s*r + c*r/2, actor.y + c*r - s*r/2);
-			C.moveTo(actor.x - s*r + c*r/2, actor.y - c*r - s*r/2);
-			C.lineTo(actor.x + s*r - c*r/2, actor.y + c*r + s*r/2);
-		}else{ //warn for unknown shapes and fall back to round
-			console.warn('unknown shape: "'+actor.shape+'", falling back to "round:'+options+'"');//TODO avoid multiple warnings for same error, give info
-			actor.shape = 'round:'+options;
+	function draw(){
+		C.clearRect(0, 0, w, h);
+		//C.beginPath();for(var i=100;i<w;i+=100){C.moveTo(i,0);C.lineTo(i,h);}for(var i=100;i<h;i+=100){C.moveTo(0,i);C.lineTo(w,i);}C.stroke();//DEBUG grid
+		//C.beginPath();C.moveTo(w/2,h/2-10);C.lineTo(w/2,h/2+10);C.moveTo(w/2-10,h/2);C.lineTo(w/2+10,h/2);C.stroke();//DEBUG center
+		for(var i=0;i<actors.length;i++){
+			var s = Math.sin(actors[i].heading);
+			var c = Math.cos(actors[i].heading);
+			var r = actors[i].size/2;
+			var x = actors[i].x;
+			var y = actors[i].y;
+			if(actors[i].shape===undefined){actors[i].shape='round';}
+			var shape   = actors[i].shape.indexOf(':')===-1?actors[i].shape:actors[i].shape.substring(0,actors[i].shape.indexOf(':'));
+			var options = actors[i].shape.indexOf(':')===-1?'':actors[i].shape.substring(actors[i].shape.indexOf(':')+1);
+			C.beginPath();
+			if(shape==='round'){
+				C.arc(x, y, r, 0, 2*Math.PI, true);
+			}else if(shape==='square'){
+				C.moveTo(x + c * r - s * r, y - s * r - c * r);
+				C.lineTo(x - s * r - c * r, y - c * r + s * r);
+				C.lineTo(x - c * r + s * r, y + s * r + c * r);
+				C.lineTo(x + s * r + c * r, y + c * r - s * r);
+				C.lineTo(x + c * r - s * r, y - s * r - c * r);
+			}else if(shape==='diamond'){
+				C.moveTo(x + c * r, y - s * r);
+				C.lineTo(x - s * r, y - c * r);
+				C.lineTo(x - c * r, y + s * r);
+				C.lineTo(x + s * r, y + c * r);
+				C.lineTo(x + c * r, y - s * r);
+			}else if(shape==='tri'){
+				C.moveTo(x + c * r, y - s * r);
+				C.lineTo(x - s * r - c * r, y - c * r + s * r);
+				C.lineTo(x - c * r + s * r, y + s * r + c * r);
+				C.lineTo(x + c * r, y - s * r);
+			}else if(shape==='arrow'){
+				C.moveTo(x + c * r, y - s * r);
+				C.lineTo(x - s * r - c * r, y - c * r + s * r);
+				C.lineTo(x, y);
+				C.lineTo(x - c * r + s * r, y + s * r + c * r);
+				C.lineTo(x + c * r, y - s * r);
+			}else if(shape==='ant'){ //TODO add legs and antennae
+				C.arc(x + c*r/2, y - s*r/2, r/3, 0, 2*Math.PI, true);
+				C.moveTo(x + r/4, y);
+				C.arc(x, y, r/4, 0, 2*Math.PI, true);
+				C.moveTo(x - c*r/2+r/3, y + s*r/2);
+				C.arc(x - c*r/2, y + s*r/2, r/3, 0, 2*Math.PI, true);
+				C.moveTo(x - s*r, y - c*r);
+				C.lineTo(x + s*r, y + c*r);
+				C.moveTo(x - s*r - c*r/2, y - c*r + s*r/2);
+				C.lineTo(x + s*r + c*r/2, y + c*r - s*r/2);
+				C.moveTo(x - s*r + c*r/2, y - c*r - s*r/2);
+				C.lineTo(x + s*r - c*r/2, y + c*r + s*r/2);
+			}else{ //warn for unknown shapes and fall back to round
+				console.warn('unknown shape: "'+actors[i].shape+'", falling back to "round:'+options+'"');//TODO avoid multiple warnings for same error, give info
+				actors[i].shape = 'round:'+options;
+			}
+			//C.moveTo(actor.x, actor.y);C.lineTo(actor.x-actor.speed*10*c, actor.y+actor.speed*10*s);//DEBUG add a trail to show speed and heading
+			//draw filled or hollow
+			if(options.match('F')){C.fill();}
+			C.stroke();
+			C.clearRect(0,0,260,10);
+			C.fillText('time:'+stats.now+' ms | frame:'+stats.frame+' | fps:'+(Math.round(stats.fps=(stats.fps*49+100000/stats.dt)/50)/100),2,9);
 		}
-		//C.moveTo(actor.x, actor.y);C.lineTo(actor.x-actor.speed*10*c, actor.y+actor.speed*10*s);//DEBUG add a trail to show speed and heading
-		//draw filled or hollow
-		if(options.match('F')){C.fill();}
-		C.stroke();
 	}
 
 	//end
