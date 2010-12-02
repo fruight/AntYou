@@ -99,57 +99,58 @@ AntYou.prototype.stop=function stop(){//abort looping
 
 AntYou.prototype.loop=function loop(){//do 1 timestep (tick)
 	var me=this;//pass in the AntYou object as a closure, otherwise we loose reference to loop() as setTimeout causes this===window
-	this.sys.next=setTimeout((function(){me.loop()}),1000/this.cfg.tps);//save a reference to make aborting possible
-	this.sys.tick++;
-	for(var i=0;i<this.sys.p.length;i++){
-		this.sys.p[i].tick();
-		if(this.sys.p[i].x < 0){this.sys.p[i].x = this.cfg.w;}else//wrap on edges
-		if(this.sys.p[i].x > this.cfg.w){this.sys.p[i].x = 0;}
-		if(this.sys.p[i].y < 0){this.sys.p[i].y = this.cfg.h;}else
-		if(this.sys.p[i].y > this.cfg.h){this.sys.p[i].y = 0;}
-		while(this.sys.p[i].a < 2*Math.PI){this.sys.p[i].a += 2*Math.PI;}
-		while(this.sys.p[i].a > 2*Math.PI){this.sys.p[i].a -= 2*Math.PI;}
+	with(this.sys){
+	next=setTimeout((function(){me.loop()}),1000/this.cfg.tps);//save a reference to make aborting possible
+	tick++;
+	for(var i=0;i<p.length;i++){
+		p[i].tick();
+		if(p[i].x < 0){p[i].x = this.cfg.w;}else//wrap on edges
+		if(p[i].x > this.cfg.w){p[i].x = 0;}
+		if(p[i].y < 0){p[i].y = this.cfg.h;}else
+		if(p[i].y > this.cfg.h){p[i].y = 0;}
+		while(p[i].a < 2*Math.PI){p[i].a += 2*Math.PI;}
+		while(p[i].a > 2*Math.PI){p[i].a -= 2*Math.PI;}
 	}
-	if((this.sys.draw+=Math.min(this.cfg.fps/this.cfg.tps,1))>=1){//limit framerate to tickrate
-		this.sys.draw-=1;
+	if((draw+=Math.min(this.cfg.fps/this.cfg.tps,1))>=1){//limit framerate to tickrate
+		draw-=1;
 		this.draw();
-	}
+	}}
 }
 
 AntYou.prototype.draw=function draw(){//render stuff
 	this.sys.frame++;
-	this.sys.C.clearRect(0,0,this.cfg.w,this.cfg.h);
-	this.sys.C.beginPath();
+	var w=this.cfg.w;
+	var h=this.cfg.h;
+	with(this.sys.C){
+	clearRect(0,0,w,h);
+	beginPath();
 	for(var i=0;i<this.sys.p.length;i++){//let the Actors draw themselves
-		this.sys.C.moveTo(this.sys.p[i].x,this.sys.p[i].y);
+		moveTo(this.sys.p[i].x,this.sys.p[i].y);
 		this.sys.p[i].draw(this.sys.C);
 	}
 	if(this.cfg.draw.grid){
-		for(var i=-0.5;i<this.cfg.w;i+=this.cfg.draw.grid){
-			this.sys.C.moveTo(i,0);
-			this.sys.C.lineTo(i,this.cfg.h);
+		for(var i=-0.5;i<w;i+=this.cfg.draw.grid){
+			moveTo(i,0);
+			lineTo(i,h);
 		}
-		for(var i=-0.5;i<this.cfg.h;i+=this.cfg.draw.grid){
-			this.sys.C.moveTo(0,i);
-			this.sys.C.lineTo(this.cfg.w,i);
+		for(var i=-0.5;i<h;i+=this.cfg.draw.grid){
+			moveTo(0,i);
+			lineTo(w,i);
 		}
 	}
-	if(this.cfg.draw.center){
-		this.sys.C.moveTo(this.cfg.w/2-this.cfg.draw.center,this.cfg.h/2);
-		this.sys.C.lineTo(this.cfg.w/2+this.cfg.draw.center,this.cfg.h/2);
-		this.sys.C.moveTo(this.cfg.w/2,this.cfg.h/2-this.cfg.draw.center);
-		this.sys.C.lineTo(this.cfg.w/2,this.cfg.h/2+this.cfg.draw.center);
-		this.sys.C.moveTo(this.cfg.w/2-this.cfg.draw.center,this.cfg.h/2-this.cfg.draw.center);
-		this.sys.C.lineTo(this.cfg.w/2+this.cfg.draw.center,this.cfg.h/2+this.cfg.draw.center);
-		this.sys.C.moveTo(this.cfg.w/2-this.cfg.draw.center,this.cfg.h/2+this.cfg.draw.center);
-		this.sys.C.lineTo(this.cfg.w/2+this.cfg.draw.center,this.cfg.h/2-this.cfg.draw.center);
+	if(this.cfg.draw.center){//draw horizontal/vertical and diagonal crosshair
+		var c=this.cfg.draw.center;
+		moveTo(w/2-c,h/2);lineTo(w/2+c,h/2);
+		moveTo(w/2,h/2-c);lineTo(w/2,h/2+c);
+		moveTo(w/2-c,h/2-c);lineTo(w/2+c,h/2+c);
+		moveTo(w/2-c,h/2+c);lineTo(w/2+c,h/2-c);
 	}
-	this.sys.C.closePath();
-	this.sys.C.stroke();
+	closePath();
+	stroke();
 	if(this.cfg.draw.stats){
-		this.sys.C.clearRect(0,0,250,10);
-		this.sys.C.fillText('dummy',2,9);//TODO actually draw real stats
-	}
+		clearRect(0,0,250,10);
+		fillText('dummy',2,9);//TODO actually draw real stats
+	}}
 }
 
 AntYou.prototype.log=function log(){
