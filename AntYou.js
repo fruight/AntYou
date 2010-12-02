@@ -9,10 +9,11 @@
  *	log subsystem works
  *	starting from scratch with OOP-architecture
  *
- * ToDo-List:
+ * ToDo-List: (numbered in order of appearance, sorted in order of importance)
  *
  * #1: implement cfg.draw.stats functionality
  * #2: fix Actor.tick to pass arbitrary numbers of arguments
+ * #4: make all coordinate stuff in Actor relative, remove all absolute vars
  * #3: points system
 */
 function AntYou(canvas,width,height){
@@ -113,14 +114,13 @@ AntYou.prototype.loop=function loop(){//do 1 timestep (tick)
 		this.sys.draw-=1;
 		this.draw();
 	}
-	//console.log('ticked '+this.sys.tick+' @'+this.sys.next);
 }
 
 AntYou.prototype.draw=function draw(){//render stuff
 	this.sys.frame++;
 	this.sys.C.clearRect(0,0,this.cfg.w,this.cfg.h);
 	this.sys.C.beginPath();
-	for(var i=0;i<this.sys.p.length;i++){
+	for(var i=0;i<this.sys.p.length;i++){//let the Actors draw themselves
 		this.sys.C.moveTo(this.sys.p[i].x,this.sys.p[i].y);
 		this.sys.p[i].draw(this.sys.C);
 	}
@@ -148,7 +148,7 @@ AntYou.prototype.draw=function draw(){//render stuff
 	this.sys.C.stroke();
 	if(this.cfg.draw.stats){
 		this.sys.C.clearRect(0,0,250,10);
-		this.sys.C.fillText('dummy',2,9);
+		this.sys.C.fillText('dummy',2,9);//TODO actually draw real stats
 	}
 }
 
@@ -157,7 +157,7 @@ AntYou.prototype.log=function log(){
 	msg.push(new Date().getTime()-this.sys.t0,arguments.callee.caller.name);
 	for(i in arguments){msg.push(arguments[i]);}
 	this.logArray.push(msg.join(':'));
-	if(this.cfg.log){console.log(msg.join('\t'));}
+	if(this.cfg.log){console.log(msg.join('\t'));}//TODO implement different loglevels
 }
 
 //------------------------------------------------------------------------------
@@ -178,7 +178,7 @@ Actor.prototype.idle=function idle(){
 }
 Actor.prototype.tick=function tick(){
 	var action = this.stack.pop();
-	this[action.shift()](action[1],action[2],action[3]);
+	this[action.shift()](action[1],action[2],action[3]);//TODO serialize actions in a better way
 }
 Actor.prototype.push=function push(action){
 	this.stack.push(action);
@@ -220,7 +220,7 @@ Actor.prototype.slide=function slide(distance,angle){
 		this.push(['slide',distance-this.v,angle]);
 	}
 }
-Actor.prototype.slideTo=function slideTo(){
+Actor.prototype.slideTo=function slideTo(x,y){
 	if(this.x===x && this.y===y){
 	}else{
 		this.push(['slide',this.getDistanceTo(x,y),this.getAngleTo(x,y)]);
