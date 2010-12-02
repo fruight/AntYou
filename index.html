@@ -11,6 +11,7 @@
 		<canvas id='AntYou'></canvas>
 		<script type='application/javascript' src='AntYou.js'></script>
 		<script type='application/javascript'>
+			with(document.getElementById('AntYou')){width=innerWidth;height=innerHeight;}
 			game=new AntYou('AntYou',innerWidth,innerHeight);
 			game.reset(true);
 		</script>

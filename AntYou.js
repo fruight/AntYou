@@ -2,8 +2,9 @@
  * 
  * AI-game inspired by AntMe
  *
- * changelog:
+ * changelog: (newest first)
  *
+ *	stats subsystem working
  * 2010-12-02: 0.1 first beta, all basic functionality working
  *	basic Actor ai functions seem stable and correct
  *	log subsystem works
@@ -28,36 +29,47 @@ function AntYou(canvas,width,height){
 		,draw:{		//renderer settings
 			grid:0		//nonzero value = grid of 'value' spacing
 			,center:0	//nonzero value = crosshair of 'value' size
-			,stats:''	//available options= %t:time %T:tick %F:frame %l:tps %f:fps TODO
+			,stats:true	//switch stats on or off, for detailed stat options see cfg.stats
 			,trails:0	//nonzero value = actors get trails indicating direction and speed TODO
 		}
-		,log:0		//loglevel, 'true' values cause forwarding to console.log
+		,stats:{
+			avg:50		//number of frames/ticks to average over
+			,std:'time: %s | tick: %T | frame: %F | tps: %t | fps: %f'//stats displaystring
+		}
+		,log:true	//loglevel, 'true' values cause forwarding to console.log
 	}
-	this.sys={//internal vars, dont ever change theese! reading should be ok
+	this.sys={//internal vars, write only for debugging, reset() should reset all of theese
 		 c:undefined	//canvas element
 		,C:undefined	//rendering context
-		,t0:undefined	//starttime
 		,fpt:undefined	//frames/tick, used by loop() to increase sys.draw
 		,draw:0		//next frame is drawn when this reaches 1
-		,tick:0		//tick counter
-		,frame:0	//frame counter
 		,next:0		//reference to next loop()timeout
 		,p:undefined	//population aka processes aka pool
+		,stats:{
+			t0:0		//starttime
+			,tick:0
+			,frame:0
+			,fps:1
+			,tps:1
+			,tLastLoop:0
+			,tLastFrame:0
+		}
 	}//functions may declare new variables here as needed and should also delete them when not needed any longer respectivly
 	this.logArray=[];
 }
 
 AntYou.prototype.reset=function reset(start){//initialize and start looping
-	if(this.sys.next){this.log('calling stop()');this.stop();}
-	this.sys.t0 = new Date().getTime();
-	this.sys.c = document.getElementById(this.cfg.cId);
-	this.sys.c.width  =this.cfg.w;
-	this.sys.c.height =this.cfg.h;
-	this.sys.C=this.sys.c.getContext('2d');
-	this.sys.C.clearRect(0,0,this.cfg.w,this.cfg.h);
-	this.sys.p=[];
+	with(this.sys){
+	if(next){this.log('calling stop()');this.stop();}
+	stats.t0 = new Date().getTime();
+	stats.frame = stats.tick = stats.fps = stats.tps = stats.tLastLoop = stats.tLastFrame = 0;//reset stats
+	draw=0;
+	c = document.getElementById(this.cfg.cId);
+	C=c.getContext('2d');
+	C.clearRect(0,0,this.cfg.w,this.cfg.h);
+	p=[];
 	for(var i=0;i<this.cfg.maxPop;i++){
-		this.sys.p.push(new Actor(
+		p.push(new Actor(
 			Math.random()*this.cfg.w
 			,Math.random()*this.cfg.h
 			,Math.random()*Math.PI*2
@@ -67,15 +79,15 @@ AntYou.prototype.reset=function reset(start){//initialize and start looping
 	}
 	if(start){this.log('calling start()');this.start();}
 	this.log('done');
-	return 'AntYou#'+this.id+'@'+this.sys.t0;//returns id and start time
-}
+	return 'AntYou#'+this.id+'@'+stats.t0;//returns id and start time
+}}
 
 AntYou.prototype.start=function start(){//start looping
 	if(this.sys.next){
 		this.log('-W- already running');
 		return 'WARNING: already running';
 	}
-	if(!this.sys.t0){
+	if(!this.sys.stats.t0){
 		this.log('calling reset(true)');
 		this.reset(true);
 		return 'called reset(true)';
@@ -100,8 +112,12 @@ AntYou.prototype.stop=function stop(){//abort looping
 AntYou.prototype.loop=function loop(){//do 1 timestep (tick)
 	var me=this;//pass in the AntYou object as a closure, otherwise we loose reference to loop() as setTimeout causes this===window
 	with(this.sys){
-	next=setTimeout((function(){me.loop()}),1000/this.cfg.tps);//save a reference to make aborting possible
-	tick++;
+	next=setTimeout((function(){me.loop()}),1000/this.cfg.tps);//save a reference to make stopping possible
+	stats.tps=Math.round(//simple floating average over 'cfg.stats.avg' ticks
+		(stats.tps*(this.cfg.stats.avg-1)+1000/(new Date().getTime()-stats.t0-stats.tLastLoop))*100/this.cfg.stats.avg
+	)/100;//gives 2 decimals after rounding
+	stats.tLastLoop=new Date().getTime()-stats.t0;//starttime relative to t0
+	stats.tick++;
 	for(var i=0;i<p.length;i++){
 		p[i].tick();
 		if(p[i].x < 0){p[i].x = this.cfg.w;}else//wrap on edges
@@ -118,7 +134,12 @@ AntYou.prototype.loop=function loop(){//do 1 timestep (tick)
 }
 
 AntYou.prototype.draw=function draw(){//render stuff
-	this.sys.frame++;
+	with(this.sys.stats){fps=Math.round(//explanation of this in loop()
+		(fps*(this.cfg.stats.avg-1)+1000/(new Date().getTime()-t0-tLastFrame))*100/this.cfg.stats.avg
+		)/100;
+		tLastFrame=new Date().getTime()-t0;//starttime relative to t0
+	}
+	this.sys.stats.frame++;
 	var w=this.cfg.w;
 	var h=this.cfg.h;
 	with(this.sys.C){
@@ -148,17 +169,27 @@ AntYou.prototype.draw=function draw(){//render stuff
 	closePath();
 	stroke();
 	if(this.cfg.draw.stats){
-		clearRect(0,0,250,10);
-		fillText('dummy',2,9);//TODO actually draw real stats
+		var stats=this.parseStats(this.cfg.stats.std);
+		clearRect(0,0,(stats.length+5)*5,10);//guess the length of the stats-string in pixels and clear a background for the stats FIXME there must be a better way to get the length
+		fillText(stats,2,9);
 	}}
 }
 
 AntYou.prototype.log=function log(){
 	var msg=[];
-	msg.push(new Date().getTime()-this.sys.t0,arguments.callee.caller.name);
+	msg.push(new Date().getTime()-this.sys.stats.t0,arguments.callee.caller.name);
 	for(i in arguments){msg.push(arguments[i]);}
 	this.logArray.push(msg.join(':'));
 	if(this.cfg.log){console.log(msg.join('\t'));}//TODO implement different loglevels
+}
+
+AntYou.prototype.parseStats=function parse(string){
+	string=string.replace(/%f/g,this.sys.stats.fps);
+	string=string.replace(/%t/g,this.sys.stats.tps);
+	string=string.replace(/%s/g,(new Date().getTime()-this.sys.stats.t0)/1000);
+	string=string.replace(/%F/g,this.sys.stats.frame);
+	string=string.replace(/%T/g,this.sys.stats.tick);
+	return string;
 }
 
 //------------------------------------------------------------------------------
