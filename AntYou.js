@@ -54,7 +54,7 @@ function AntYou(canvas,width,height){
 			,frame:0
 			,fps:1
 			,tps:1
-			,tLastLoop:0
+			,tLastTick:0
 			,tLastFrame:0
 		}
 	}//functions may declare new variables here as needed and should also delete them when not needed any longer respectivly
@@ -65,7 +65,7 @@ AntYou.prototype.reset=function reset(start){//initialize and start looping
 	with(this.sys){
 	if(next){this.log('calling stop()');this.stop();}
 	stats.t0 = new Date().getTime();
-	stats.frame = stats.tick = stats.fps = stats.tps = stats.tLastLoop = stats.tLastFrame = 0;//reset stats
+	stats.frame = stats.tick = stats.fps = stats.tps = stats.tLastTick = stats.tLastFrame = 0;//reset stats
 	draw=0;
 	c = document.getElementById(this.cfg.cId);
 	C=c.getContext('2d');
@@ -112,14 +112,18 @@ AntYou.prototype.stop=function stop(){//abort looping
 	return stopped;
 }
 
-AntYou.prototype.loop=function loop(){//do 1 timestep (tick)
+AntYou.prototype.loop=function loop(){
 	var me=this;//pass in the AntYou object as a closure, otherwise we loose reference to loop() as setTimeout causes this===window
+	this.sys.next=setTimeout((function(){me.loop()}),1000/this.cfg.tps);//save a reference to make stopping possible
+	this.tick();
+}
+
+AntYou.prototype.tick=function tick(){//do 1 timestep (tick)
 	with(this.sys){
-	next=setTimeout((function(){me.loop()}),1000/this.cfg.tps);//save a reference to make stopping possible
 	stats.tps=Math.round(//simple floating average over 'cfg.stats.avg' ticks
-		(stats.tps*(this.cfg.stats.avg-1)+1000/(new Date().getTime()-stats.t0-stats.tLastLoop))*100/this.cfg.stats.avg
+		(stats.tps*(this.cfg.stats.avg-1)+1000/(new Date().getTime()-stats.t0-stats.tLastTick))*100/this.cfg.stats.avg
 	)/100;//gives 2 decimals after rounding
-	stats.tLastLoop=new Date().getTime()-stats.t0;//starttime relative to t0
+	stats.tLastTick=new Date().getTime()-stats.t0;//starttime relative to t0
 	stats.tick++;
 	for(var i=0;i<p.length;i++){
 		p[i].tick();
