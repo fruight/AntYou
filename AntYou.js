@@ -100,16 +100,20 @@ AntYou.prototype.start=function start(){//start looping
 	return 'started';
 }
 
-AntYou.prototype.stop=function stop(){//abort looping
+AntYou.prototype.stop=function stop(time){//stop looping
+	var me=this;
 	if(!this.sys.next){
 		this.log('-W- not running');
 		return 'WARNING: not running';
+	}else if(time>0){setTimeout(function(){me.stop()},time+this.sys.stats.t0-new Date().getTime());//stop at time
+	}else if(time<0){setTimeout(function(){me.stop()},Math.abs(time));//stop in time
+	}else{//stop now
+		clearTimeout(this.sys.next);
+		var stopped=this.sys.next;
+		this.sys.next=0;
+		this.log(stopped,'done');
+		return stopped;
 	}
-	clearTimeout(this.sys.next);
-	var stopped=this.sys.next;
-	this.sys.next=0;
-	this.log(stopped,'done');
-	return stopped;
 }
 
 AntYou.prototype.loop=function loop(){
