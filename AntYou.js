@@ -31,6 +31,9 @@ function AntYou(canvas,width,height){
 			,center:0	//nonzero value = crosshair of 'value' size
 			,stats:true	//switch stats on or off, for detailed stat options see cfg.stats
 			,trails:0	//nonzero value = actors get trails indicating direction and speed TODO
+			,color:'#000'	//default color
+			,fillColor:'#f00'
+			,fill:false
 		}
 		,stats:{
 			avg:50		//number of frames/ticks to average over
@@ -145,6 +148,7 @@ AntYou.prototype.draw=function draw(){//render stuff
 	with(this.sys.C){
 	clearRect(0,0,w,h);
 	beginPath();
+	setStrokeColor(this.cfg.draw.color);
 	for(var i=0;i<this.sys.p.length;i++){//let the Actors draw themselves
 		moveTo(this.sys.p[i].x,this.sys.p[i].y);
 		this.sys.p[i].draw(this.sys.C);
@@ -167,6 +171,7 @@ AntYou.prototype.draw=function draw(){//render stuff
 		moveTo(w/2-c,h/2+c);lineTo(w/2+c,h/2-c);
 	}
 	closePath();
+	if(this.cfg.draw.fill){setFillColor(this.cfg.draw.fillColor);fill();setFillColor(this.cfg.draw.color);}
 	stroke();
 	if(this.cfg.draw.stats){
 		var stats=this.parseStats(this.cfg.stats.std);
@@ -279,4 +284,8 @@ Actor.prototype.sleep=function sleep(duration){
 
 Actor.prototype.draw=function draw(C){
 	C.arc(this.x,this.y,this.size,-this.a,this.a+Math.PI*2,true);
+	/*C.lineTo(this.x-Math.cos(this.a)*this.size+Math.sin(this.a)*this.size,this.y+Math.sin(this.a)*this.size+Math.cos(this.a)*this.size);
+	C.lineTo(this.x+Math.cos(this.a)*this.size,this.y-Math.sin(this.a)*this.size);
+	C.lineTo(this.x-Math.sin(this.a)*this.size-Math.cos(this.a)*this.size,this.y-Math.cos(this.a)*this.size+Math.sin(this.a)*this.size);
+	C.lineTo(this.x,this.y);*///arrow shape
 }
