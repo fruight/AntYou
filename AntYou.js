@@ -193,8 +193,8 @@ AntYou.prototype.log=function log(){
 }
 
 AntYou.prototype.parseStats=function parse(string){
-	string=string.replace(/%f/g,this.sys.stats.fps);
-	string=string.replace(/%t/g,this.sys.stats.tps);
+	string=string.replace(/%f/g,this.sys.stats.fps);//extremely exact ( <1% deviation ) even under load
+	string=string.replace(/%t/g,this.sys.stats.tps);//up to 20% to high under high load FIXME
 	string=string.replace(/%s/g,(new Date().getTime()-this.sys.stats.t0)/1000);
 	string=string.replace(/%F/g,this.sys.stats.frame);
 	string=string.replace(/%T/g,this.sys.stats.tick);
