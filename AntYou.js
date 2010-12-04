@@ -4,6 +4,7 @@
  *
  * changelog: (newest first)
  *
+ *	framerate has priority to tickrate and takes feedback from measured fps
  *	all configuration is optionally supplyable
  *	stats subsystem working
  * 2010-12-02: 0.1 first beta, all basic functionality working
@@ -142,8 +143,8 @@ function AntYou(){
 			while(p[i].a < 2*Math.PI){p[i].a += 2*Math.PI;}
 			while(p[i].a > 2*Math.PI){p[i].a -= 2*Math.PI;}
 		}
-		if((draw+=Math.min(this.cfg.fps/this.cfg.tps,1))>=1){//limit framerate to tickrate
-			draw-=1;
+		if((draw+=Math.min(this.cfg.fps/this.cfg.tps,1))>=1 || stats.fps<this.cfg.fps){//limit framerate to tickrate and try to keep framerate at cfg.fps
+			draw=Math.max(0,draw-1);
 			this.draw();
 		}}
 	}
@@ -201,8 +202,8 @@ function AntYou(){
 	}
 
 	this.parseStats=function parse(string){
-		string=string.replace(/%f/g,this.sys.stats.fps);//extremely exact ( <1% deviation ) even under load
-		string=string.replace(/%t/g,this.sys.stats.tps);//up to 20% to high under high load FIXME
+		string=string.replace(/%f/g,this.sys.stats.fps);
+		string=string.replace(/%t/g,this.sys.stats.tps);
 		string=string.replace(/%s/g,(new Date().getTime()-this.sys.stats.t0)/1000);
 		string=string.replace(/%F/g,this.sys.stats.frame);
 		string=string.replace(/%T/g,this.sys.stats.tick);
