@@ -18,12 +18,13 @@
  * #5: decouple canvas size and world size and enable zooming
  * #3: points system
 */
-function AntYou(canvas,width,height){
+
+function AntYou(){
 	this.id=new Date().getTime();
 	this.cfg={//configuration, should be safe to change from outside to interface with the engine
-		 w:width
-		,h:height
-		,cId:canvas	//id of canvas element
+		 w:200
+		,h:100
+		,canvas:'AntYou'//id of canvas element
 		,tps:40		//target ticks/second
 		,fps:40		//target frames/second
 		,maxPop:1000	//maximal population
@@ -42,6 +43,8 @@ function AntYou(canvas,width,height){
 		}
 		,log:true	//loglevel, 'true' values cause forwarding to console.log
 	}
+	for(i in arguments[0]){if(this.cfg[i]!==undefined){this.cfg[i]=arguments[0][i];}}//apply supplied options
+
 	this.sys={//internal vars, write only for debugging, reset() should reset all of theese
 		 c:undefined	//canvas element
 		,C:undefined	//rendering context
@@ -67,7 +70,7 @@ function AntYou(canvas,width,height){
 		stats.t0 = new Date().getTime();
 		stats.frame = stats.tick = stats.fps = stats.tps = stats.tLastTick = stats.tLastFrame = 0;//reset stats
 		draw=0;
-		c = document.getElementById(this.cfg.cId);
+		c = document.getElementById(this.cfg.canvas);
 		C=c.getContext('2d');
 		C.clearRect(0,0,this.cfg.w,this.cfg.h);
 		p=[];
