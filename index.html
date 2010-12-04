@@ -13,7 +13,7 @@
 		<script type='application/javascript'>
 			with(document.getElementById('AntYou')){width=innerWidth;height=innerHeight;}
 			game=new AntYou({canvas:'AntYou',w:innerWidth,h:innerHeight,fps:30,tps:60});
-			game.reset(true);
+			if(confirm('start?')){game.reset(true);}
 		</script>
 	</body>
 </html>
