@@ -201,7 +201,7 @@ function AntYou(){
 		if(this.cfg.log){console.log(msg.join('\t'));}//TODO implement different loglevels
 	}
 
-	this.parseStats=function parse(string){
+	this.parseStats=function parseStats(string){
 		string=string.replace(/%f/g,this.sys.stats.fps);
 		string=string.replace(/%t/g,this.sys.stats.tps);
 		string=string.replace(/%s/g,(new Date().getTime()-this.sys.stats.t0)/1000);
@@ -257,7 +257,7 @@ function Actor(x,y,heading,speed,size){
 		}else{
 			this.push(['slideTo',x,y]);
 			this.push(['go',this.getDistanceTo(x,y)]);
-			this.push(['turnTo',this.getAngleTo(x,y)]);
+			this.push(['turn',this.getAngleTo(x,y)]);
 		}
 	}
 	this.slide=function slide(distance,angle){
