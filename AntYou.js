@@ -4,6 +4,7 @@
  *
  * changelog: (newest first)
  *
+ *	all configuration is optionally supplyable
  *	stats subsystem working
  * 2010-12-02: 0.1 first beta, all basic functionality working
  *	basic Actor ai functions seem stable and correct
